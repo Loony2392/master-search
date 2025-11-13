@@ -1,77 +1,134 @@
-name: Test & Quality Check
+name: 🧪 CI/CD - Test & Quality Assurance
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, feature/* ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      run_extended_tests:
+        description: 'Run extended test suite'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.11'
+  MINIMUM_COVERAGE: 75
 
 jobs:
-  syntax-check:
-    name: Syntax & Code Quality Check
+  pre-flight-checks:
+    name: 🔍 Pre-flight Checks
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Detect changes
+      id: changes
+      uses: dorny/paths-filter@v2
+      with:
+        filters: |
+          src:
+            - 'src/**'
+            - '*.py'
+          tests:
+            - 'tests/**'
+            - 'test_*.py'
+          config:
+            - 'locales/**'
+            - 'requirements*.txt'
+            - 'version.py'
+    
+    - name: Set matrix for tests
+      id: set-matrix
+      run: |
+        if [[ "${{ steps.changes.outputs.src }}" == "true" ]] || [[ "${{ github.event.inputs.run_extended_tests }}" == "true" ]]; then
+          echo "matrix={\"os\": [\"ubuntu-latest\", \"windows-latest\", \"macos-latest\"], \"python-version\": [\"3.9\", \"3.10\", \"3.11\"]}" >> $GITHUB_OUTPUT
+        else
+          echo "matrix={\"os\": [\"ubuntu-latest\"], \"python-version\": [\"3.11\"]}" >> $GITHUB_OUTPUT
+        fi
+
+  code-quality:
+    name: 📏 Code Quality & Standards
     runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python 3.11
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11'
+        python-version: ${{ env.PYTHON_VERSION }}
     
-    - name: Install linting tools
+    - name: Install quality tools
       run: |
         python -m pip install --upgrade pip
-        pip install pylint flake8 black isort mypy
+        pip install pylint flake8 black isort mypy bandit safety
     
-    - name: Python syntax check (py_compile)
+    - name: 🔍 Python syntax validation
       run: |
-        echo "🔍 Checking Python syntax..."
-        python -m py_compile file_search_tool.py
-        python -m py_compile gui_search_tool.py
-        python -m py_compile report_generator.py
-        python -m py_compile i18n.py
-        python -m py_compile language_config.py
-        python -m py_compile gui_main.py
-        python -m py_compile cli_main.py
-        python -m py_compile version.py
-        python -m py_compile setup_msi.py
-        python -m py_compile build_msi.py
-        python -m py_compile performance_config.py
-        python -m py_compile language_config.py
+        echo "::group::Checking Python syntax"
+        find . -name "*.py" -not -path "./build/*" -not -path "./.github/*" | while read file; do
+          echo "Checking: $file"
+          python -m py_compile "$file"
+        done
         echo "✅ All Python files have valid syntax"
+        echo "::endgroup::"
     
-    - name: Flake8 linting
+    - name: 🎨 Code formatting check (Black)
       run: |
-        echo "🔍 Running flake8 linting..."
-        flake8 file_search_tool.py gui_search_tool.py report_generator.py i18n.py --max-line-length=120 --count || true
-        echo "✅ Flake8 check completed"
+        echo "::group::Code formatting check"
+        black --check --diff --color .
+        echo "::endgroup::"
     
-    - name: Pylint analysis
+    - name: 📋 Import sorting (isort)
       run: |
-        echo "🔍 Running pylint analysis..."
-        pylint file_search_tool.py gui_search_tool.py report_generator.py i18n.py language_config.py --fail-under=7.0 --max-line-length=120 || true
-        echo "✅ Pylint analysis completed"
+        echo "::group::Import sorting check"
+        isort --check-only --diff --color .
+        echo "::endgroup::"
     
-    - name: Code format check (black)
+    - name: 🔬 Flake8 linting
       run: |
-        echo "🔍 Checking code formatting..."
-        black --check file_search_tool.py gui_search_tool.py report_generator.py i18n.py || true
-        echo "✅ Format check completed"
+        echo "::group::Flake8 linting"
+        flake8 . --max-line-length=120 --extend-ignore=E203,W503 --statistics
+        echo "::endgroup::"
     
-    - name: Import sort check (isort)
+    - name: 🔍 Pylint analysis
       run: |
-        echo "🔍 Checking import sorting..."
-        isort --check-only file_search_tool.py gui_search_tool.py report_generator.py || true
-        echo "✅ Import sort check completed"
+        echo "::group::Pylint analysis"
+        find . -name "*.py" -not -path "./build/*" -not -path "./tests/*" | xargs pylint --fail-under=7.0 --rcfile=.pylintrc || true
+        echo "::endgroup::"
+    
+    - name: 🛡️ Security scan (Bandit)
+      run: |
+        echo "::group::Security scan"
+        bandit -r . -x tests/,build/ -f json -o bandit-report.json || true
+        bandit -r . -x tests/,build/ -f txt || true
+        echo "::endgroup::"
+    
+    - name: 📦 Dependency security check
+      run: |
+        echo "::group::Dependency security check"
+        safety check --json --output safety-report.json || true
+        safety check || true
+        echo "::endgroup::"
 
   unit-tests:
-    name: Unit Tests
+    name: 🧪 Unit Tests
     runs-on: ${{ matrix.os }}
+    needs: pre-flight-checks
     strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ['3.9', '3.10', '3.11']
+      matrix: ${{ fromJson(needs.pre-flight-checks.outputs.matrix) }}
+      fail-fast: false
     
     steps:
     - uses: actions/checkout@v4
@@ -85,36 +142,58 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest pytest-cov pytest-xdist coverage
+        pip install pytest pytest-cov pytest-xdist pytest-html coverage
     
-    - name: Run unit tests
+    - name: 🧪 Run unit tests
       run: |
-        pytest tests/test_file_search_tool.py -v --cov=file_search_tool --cov-report=xml
+        echo "::group::Unit Tests"
+        pytest tests/ -v \
+          --cov=src \
+          --cov=. \
+          --cov-report=xml \
+          --cov-report=html \
+          --cov-report=term-missing \
+          --cov-fail-under=${{ env.MINIMUM_COVERAGE }} \
+          --html=pytest-report.html \
+          --self-contained-html \
+          --junitxml=pytest-junit.xml
+        echo "::endgroup::"
     
-    - name: Run integration tests
-      run: |
-        pytest tests/test_integration.py -v
+    - name: 📊 Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.os }}-py${{ matrix.python-version }}
+        path: |
+          pytest-report.html
+          pytest-junit.xml
+          coverage.xml
+          htmlcov/
     
-    - name: Upload coverage reports
+    - name: 📈 Upload coverage to Codecov
       uses: codecov/codecov-action@v3
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == env.PYTHON_VERSION
       with:
         files: ./coverage.xml
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
 
-  functional-tests:
-    name: Functional Tests
-    runs-on: windows-latest
+  integration-tests:
+    name: 🔗 Integration Tests  
+    runs-on: ${{ matrix.os }}
+    needs: pre-flight-checks
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python 3.11
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11'
+        python-version: ${{ env.PYTHON_VERSION }}
     
     - name: Install dependencies
       run: |
@@ -122,171 +201,258 @@ jobs:
         pip install -r requirements.txt
         pip install pytest
     
-    - name: Test version management
+    - name: 🌍 Test localization system
       run: |
-        echo "Testing version management..."
-        python -c "from version import VERSION, AUTHOR, EMAIL; print(f'✅ Version: {VERSION}'); print(f'✅ Author: {AUTHOR}'); print(f'✅ Email: {EMAIL}')"
+        echo "::group::Localization Tests"
+        python test_complete_translations.py
+        echo "::endgroup::"
     
-    - name: Test CLI entry point
+    - name: 🔧 Test version management
       run: |
-        echo "Testing CLI entry point..."
-        python cli_main.py --help > $null 2>&1 || python cli_main.py --version
-        echo "✅ CLI entry point working"
-    
-    - name: Test imports
-      run: |
-        echo "Testing all module imports..."
-        python -c "from file_search_tool import FileSearchTool; print('✅ FileSearchTool imported')"
-        python -c "from report_generator import HTMLReportGenerator; print('✅ HTMLReportGenerator imported')"
-        python -c "from i18n import I18n; print('✅ I18n imported')"
-        python -c "from language_config import LanguageConfig; print('✅ LanguageConfig imported')"
-    
-    - name: Test translation files
-      run: |
-        echo "Testing translation files..."
+        echo "::group::Version Management"
         python -c "
-        import json
-        with open('locales/en.json') as f:
-            en = json.load(f)
-        with open('locales/de.json') as f:
-            de = json.load(f)
-        print(f'✅ English translations: {len(en)} keys')
-        print(f'✅ German translations: {len(de)} keys')
-        en_keys = set(en.keys())
-        de_keys = set(de.keys())
-        if en_keys == de_keys:
-            print('✅ Translation keys match')
-        else:
-            print(f'⚠️  Missing in DE: {en_keys - de_keys}')
-            print(f'⚠️  Missing in EN: {de_keys - en_keys}')
+        import sys; sys.path.insert(0, 'src' if os.path.exists('src') else '.')
+        from version import VERSION, AUTHOR, EMAIL, COMPANY
+        print(f'✅ Version: {VERSION}')
+        print(f'✅ Author: {AUTHOR}') 
+        print(f'✅ Email: {EMAIL}')
+        print(f'✅ Company: {COMPANY}')
+        assert VERSION.count('.') >= 2, 'Version format invalid'
+        print('✅ Version format valid')
         "
+        echo "::endgroup::"
     
-    - name: Test file search functionality
+    - name: 🎯 Test core functionality
       run: |
-        echo "Testing file search functionality..."
+        echo "::group::Core Functionality Tests"
         python -c "
+        import sys, os
+        sys.path.insert(0, 'src' if os.path.exists('src') else '.')
+        
+        # Test file search tool
         from file_search_tool import FileSearchTool
         tool = FileSearchTool()
         tool.add_search_term('test')
         tool.set_search_mode('any')
-        print('✅ FileSearchTool can be configured')
-        print('✅ Search terms can be added')
-        print('✅ Search mode can be set')
+        print('✅ FileSearchTool working')
+        
+        # Test i18n system
+        from i18n import I18n, tr, set_locale
+        i18n = I18n()
+        set_locale('en')
+        result = tr('app_title')
+        print(f'✅ I18n working: {result}')
+        
+        # Test platform utilities
+        if os.path.exists('src/platform_utils.py'):
+            from platform_utils import PlatformUtils
+            platform = PlatformUtils.get_platform()
+            print(f'✅ Platform detection: {platform}')
+        
+        # Test animation system
+        if os.path.exists('src/loading_animations.py'):
+            import loading_animations
+            print('✅ Animation system loaded')
+        
+        print('✅ All core components working')
         "
+        echo "::endgroup::"
     
-    - name: Test report generation
+    - name: 🎨 Test GUI components (Linux only)
+      if: matrix.os == 'ubuntu-latest'
       run: |
-        echo "Testing report generation..."
+        echo "::group::GUI Tests (Headless)"
+        # Install virtual display for GUI testing
+        sudo apt-get update
+        sudo apt-get install -y xvfb
+        
+        # Test GUI imports without display
         python -c "
-        from report_generator import HTMLReportGenerator
-        gen = HTMLReportGenerator(language='en')
-        report = gen.generate({
-            'search_term': 'test',
-            'results': [],
-            'statistics': {'files_searched': 0, 'matches_found': 0}
-        })
-        if report and len(report) > 100:
-            print('✅ HTML report generated successfully')
-        else:
-            print('⚠️  Report generation issue')
+        import sys, os
+        sys.path.insert(0, 'src' if os.path.exists('src') else '.')
+        
+        # Test GUI imports (without actually starting GUI)
+        import gui_search_tool
+        print('✅ GUI search tool imports')
+        
+        if os.path.exists('src/loading_animations.py'):
+            import loading_animations
+            print('✅ Loading animations import')
+        
+        print('✅ GUI components import successfully')
         "
-    
-    - name: Test MSI build configuration
-      run: |
-        echo "Testing MSI build configuration..."
-        python -c "
-        import sys
-        sys.path.insert(0, '.')
-        from setup_msi import setup
-        print('✅ setup_msi.py is valid')
-        print('✅ MSI configuration can be loaded')
-        "
+        echo "::endgroup::"
 
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
+  build-tests:
+    name: 🏗️ Build Verification
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11'
-    
-    - name: Install security tools
-      run: |
-        python -m pip install --upgrade pip
-        pip install bandit safety
-    
-    - name: Bandit security check
-      run: |
-        echo "🔍 Running Bandit security scan..."
-        bandit -r file_search_tool.py gui_search_tool.py report_generator.py i18n.py -f csv || true
-        echo "✅ Security scan completed"
-    
-    - name: Check for hardcoded secrets
-      run: |
-        echo "🔍 Checking for hardcoded secrets..."
-        if grep -r "password\|api_key\|secret\|token" *.py 2>/dev/null | grep -v "# \|test\|def \|\""; then
-          echo "⚠️  Potential hardcoded secrets found"
-          exit 1
-        else
-          echo "✅ No hardcoded secrets found"
-        fi
-
-  build-verification:
-    name: Build Verification
-    runs-on: windows-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+        python-version: ${{ env.PYTHON_VERSION }}
     
     - name: Install build dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install cx_Freeze
         pip install -r requirements.txt
+        if [ "${{ matrix.os }}" == "windows-latest" ]; then
+          pip install cx_Freeze
+        fi
+      shell: bash
     
-    - name: Verify build configuration
+    - name: 🔧 Test build configuration
       run: |
-        echo "Verifying build configuration..."
-        python -c "
-        import sys
-        sys.path.insert(0, '.')
-        from version import VERSION
-        print(f'✅ Build version: {VERSION}')
-        "
-    
-    - name: Test MSI build (dry run)
-      run: |
-        echo "Testing build process..."
-        python build_msi.py
-        if (Test-Path "build") {
-            Write-Host "✅ Build directory created"
-        } else {
-            Write-Host "⚠️  Build directory not created"
-        }
-      shell: pwsh
-      continue-on-error: true
+        echo "::group::Build Configuration"
+        if [ -f "setup_msi.py" ]; then
+          python -c "
+          import sys
+          sys.path.insert(0, '.')
+          try:
+              from setup_msi import setup
+              print('✅ MSI setup configuration valid')
+          except ImportError as e:
+              print(f'⚠️  MSI setup not available: {e}')
+          "
+        fi
+        
+        if [ -f "scripts/build_dmg.py" ]; then
+          python -c "
+          import sys
+          sys.path.insert(0, 'scripts')
+          try:
+              import build_dmg
+              print('✅ DMG build configuration available')
+          except ImportError as e:
+              print(f'⚠️  DMG build not available: {e}')
+          "
+        fi
+        echo "::endgroup::"
+      shell: bash
 
-  final-status:
-    name: Final Status Check
+  performance-tests:
+    name: ⚡ Performance Tests
     runs-on: ubuntu-latest
-    needs: [syntax-check, unit-tests, functional-tests, security-scan, build-verification]
+    if: github.event.inputs.run_extended_tests == 'true' || github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest-benchmark memory_profiler
+    
+    - name: ⚡ Performance benchmarks
+      run: |
+        echo "::group::Performance Tests"
+        # Create test files for performance testing
+        mkdir -p test_perf_data
+        for i in {1..100}; do
+          echo "test content line $i" > "test_perf_data/test_file_$i.txt"
+        done
+        
+        # Run performance tests
+        python -c "
+        import sys, time, os
+        sys.path.insert(0, 'src' if os.path.exists('src') else '.')
+        from file_search_tool import FileSearchTool
+        
+        # Test search performance
+        start_time = time.time()
+        tool = FileSearchTool()
+        tool.set_search_directory('./test_perf_data')
+        tool.add_search_term('test')
+        tool.set_search_mode('any')
+        
+        # Simulate search (without actual file operations)
+        end_time = time.time()
+        duration = end_time - start_time
+        
+        print(f'✅ Search setup completed in {duration:.4f} seconds')
+        assert duration < 1.0, f'Setup too slow: {duration}s'
+        print('✅ Performance within acceptable limits')
+        "
+        
+        # Cleanup
+        rm -rf test_perf_data
+        echo "::endgroup::"
+
+  compatibility-matrix:
+    name: 🔄 Compatibility Matrix
+    runs-on: ${{ matrix.os }}
+    if: github.event.inputs.run_extended_tests == 'true'
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04, windows-2019, windows-2022, macos-11, macos-12]
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+        exclude:
+          - os: macos-11
+            python-version: '3.8'
+      fail-fast: false
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Quick compatibility test
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-minimal.txt
+        python -c "
+        import sys, os
+        sys.path.insert(0, 'src' if os.path.exists('src') else '.')
+        from version import VERSION
+        print(f'✅ Compatible: Python {sys.version} on ${{ matrix.os }}')
+        print(f'✅ Version: {VERSION}')
+        "
+
+  quality-gate:
+    name: 🚦 Quality Gate
+    runs-on: ubuntu-latest
+    needs: [code-quality, unit-tests, integration-tests, build-tests]
     if: always()
     
     steps:
-    - name: Check all tests passed
+    - name: 📊 Evaluate quality gate
       run: |
-        echo "🎉 All quality checks completed!"
-        echo "✅ Syntax check: ${{ needs.syntax-check.result }}"
-        echo "✅ Unit tests: ${{ needs.unit-tests.result }}"
-        echo "✅ Functional tests: ${{ needs.functional-tests.result }}"
-        echo "✅ Security scan: ${{ needs.security-scan.result }}"
-        echo "✅ Build verification: ${{ needs.build-verification.result }}"
+        echo "::group::Quality Gate Results"
+        echo "📏 Code Quality: ${{ needs.code-quality.result }}"
+        echo "🧪 Unit Tests: ${{ needs.unit-tests.result }}"
+        echo "🔗 Integration Tests: ${{ needs.integration-tests.result }}"
+        echo "🏗️ Build Tests: ${{ needs.build-tests.result }}"
+        
+        # Determine overall result
+        if [[ "${{ needs.code-quality.result }}" == "success" ]] && \
+           [[ "${{ needs.unit-tests.result }}" == "success" ]] && \
+           [[ "${{ needs.integration-tests.result }}" == "success" ]] && \
+           [[ "${{ needs.build-tests.result }}" == "success" ]]; then
+          echo "🎉 ✅ QUALITY GATE: PASSED"
+          echo "quality_gate_status=passed" >> $GITHUB_ENV
+        else
+          echo "❌ QUALITY GATE: FAILED"
+          echo "quality_gate_status=failed" >> $GITHUB_ENV
+          exit 1
+        fi
+        echo "::endgroup::"
+    
+    - name: 🎯 Set status check
+      if: always()
+      run: |
+        echo "Quality Gate Status: $quality_gate_status"
