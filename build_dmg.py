@@ -209,7 +209,7 @@ OPTIONS = {{
             }}
         ],
     }},
-    'iconfile': None,  # Add icon file if available
+    'iconfile': 'media/master_search.icns',  # App icon for Finder display
 }}
 
 # Copy source files to build directory
