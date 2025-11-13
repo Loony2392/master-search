@@ -239,111 +239,41 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
-    - name: Build Windows Installer with Inno Setup
+    - name: Build Windows MSI Installer
       if: matrix.os == 'windows-latest'
       shell: pwsh
       run: |
-        echo "🏗️ Building Windows Installer with Inno Setup..."
+        echo "🏗️ Building Windows MSI Installer with cx_Freeze..."
         
-        # Install PyInstaller and build executables
-        echo "📦 Building executables with PyInstaller..."
-        pip install PyInstaller>=6.1.0
+        # Install build dependencies
+        pip install cx_Freeze>=7.0 PyInstaller>=6.1.0
         
-        python -m PyInstaller scripts/gui.spec
-        python -m PyInstaller scripts/cli.spec
+        # Run the MSI builder script
+        python build_msi.py
         
-        if (-not (Test-Path "dist/MasterSearch.exe")) {
-          Write-Error "❌ GUI executable not found"
-          exit 1
-        }
-        if (-not (Test-Path "dist/MasterSearchCLI.exe")) {
-          Write-Error "❌ CLI executable not found"
-          exit 1
-        }
-        
-        echo "✅ Executables built successfully"
-        
-        # Download and install Inno Setup
-        echo "📥 Downloading Inno Setup..."
-        $innoSetupUrl = "https://jrsoftware.org/download.php/is-unicode.exe"
-        $innoSetupInstaller = "$env:TEMP\InnoSetup.exe"
-        
-        # Try direct download
-        try {
-          Invoke-WebRequest -Uri $innoSetupUrl -OutFile $innoSetupInstaller -ErrorAction SilentlyContinue
-        } catch {
-          # Fallback to alternative URL
-          $innoSetupUrl = "https://files.jrsoftware.org/is/6/innosetup-6.2.2.exe"
-          try {
-            Invoke-WebRequest -Uri $innoSetupUrl -OutFile $innoSetupInstaller
-          } catch {
-            Write-Host "⚠️ Could not download Inno Setup. Trying system installation..."
-            # Check if already installed
-            if (-not (Get-Command iscc.exe -ErrorAction SilentlyContinue)) {
-              Write-Error "❌ Inno Setup not available. Falling back to ZIP package."
-              exit 0  # Continue with ZIP as fallback
-            }
-          }
-        }
-        
-        # Install Inno Setup if downloaded
-        if (Test-Path $innoSetupInstaller) {
-          echo "⚙️ Installing Inno Setup..."
-          & $innoSetupInstaller /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
-          Start-Sleep -Seconds 5
-        }
-        
-        # Build MSI using Inno Setup
-        if (Get-Command iscc.exe -ErrorAction SilentlyContinue) {
-          echo "🔨 Building MSI with Inno Setup..."
+        # Check if MSI was created
+        $msi = Get-ChildItem -Path "dist" -Filter "Master_Search-*.msi" | Select-Object -First 1
+        if ($msi) {
+          Write-Host "✅ MSI successfully created: $($msi.Name)"
           
           # Create release_builds directory
           New-Item -ItemType Directory -Force -Path "release_builds" | Out-Null
           
-          # Compile Inno Setup script
-          iscc.exe scripts/MasterSearch.iss
+          # Copy MSI to release_builds
+          Copy-Item $msi.FullName -Destination "release_builds/$($msi.Name)"
           
-          if ($LASTEXITCODE -eq 0) {
-            # Find and rename the generated EXE (Inno Setup creates EXE not MSI)
-            $setupExe = Get-ChildItem -Path "release_builds" -Filter "Master_Search_*.exe" | Select-Object -First 1
-            if ($setupExe) {
-              $msiName = "Master_Search_v${{ needs.validate-release.outputs.version }}_Windows.exe"
-              Rename-Item -Path $setupExe.FullName -NewName $msiName
-              $size = [math]::Round((Get-Item "release_builds/$msiName").Length / 1MB, 2)
-              Write-Host "✅ Windows installer created: $msiName"
-              Write-Host "📦 Size: $size MB"
-              
-              # Create SHA256 checksum
-              $hash = (Get-FileHash "release_builds/$msiName" -Algorithm SHA256).Hash
-              Add-Content -Path "release_builds/$msiName.sha256" -Value "$hash  $msiName"
-              Write-Host "🔐 SHA256: $hash"
-            } else {
-              Write-Error "❌ Installer EXE not found after compilation"
-              Get-ChildItem release_builds
-              exit 1
-            }
-          } else {
-            Write-Error "❌ Inno Setup compilation failed with exit code $LASTEXITCODE"
-            exit 1
-          }
+          # Get file size
+          $size = [math]::Round($msi.Length / 1MB, 2)
+          Write-Host "📦 Size: $size MB"
+          
+          # Create SHA256 checksum
+          $hash = (Get-FileHash $msi.FullName -Algorithm SHA256).Hash
+          Add-Content -Path "release_builds/$($msi.Name).sha256" -Value "$hash  $($msi.Name)"
+          Write-Host "🔐 SHA256: $hash"
         } else {
-          Write-Host "⚠️ Inno Setup not available. Falling back to ZIP package..."
-          
-          # Fallback: Create ZIP installer package
-          echo "📦 Creating installer package (ZIP)..."
-          python scripts/create_installer_package.py
-          
-          # Find and rename ZIP
-          $zipFile = Get-ChildItem -Path "release_builds" -Filter "MasterSearch_v*.zip" | Select-Object -First 1
-          if ($zipFile) {
-            $newName = "Master_Search_v${{ needs.validate-release.outputs.version }}_Windows.zip"
-            Rename-Item -Path $zipFile.FullName -NewName $newName
-            Write-Host "✅ Windows installer package created: $newName"
-            
-            # Create SHA256 checksum
-            $hash = (Get-FileHash "release_builds/$newName" -Algorithm SHA256).Hash
-            Add-Content -Path "release_builds/$newName.sha256" -Value "$hash  $newName"
-          }
+          Write-Error "❌ MSI file not found in dist/ directory"
+          Get-ChildItem dist/
+          exit 1
         }
     
     - name: Build macOS DMG
