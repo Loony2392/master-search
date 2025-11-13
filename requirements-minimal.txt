@@ -1,0 +1,23 @@
+# Master Search - Minimal Requirements
+# ====================================
+# Minimale Python-Abhängigkeiten für das Master Search Tool
+# Author: Bastian Alexander Kolb
+
+# Einzige zwingend erforderliche Abhängigkeit
+colorama>=0.4.6
+
+# Setup tools (für Installation und Distribution)
+setuptools>=68.0.0
+
+# Alle anderen Funktionen nutzen Python Standard Library:
+# - os (Dateisystem-Operationen)
+# - sys (System-spezifische Parameter)
+# - re (Regular Expressions)
+# - html (HTML-Escaping)
+# - pathlib (Pfad-Operationen)
+# - datetime (Zeitstempel)
+# - mimetypes (MIME-Type-Erkennung)
+# - time (Zeit-Funktionen)
+
+# Installation:
+# pip install -r requirements-minimal.txt

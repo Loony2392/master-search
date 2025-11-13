@@ -1,0 +1,153 @@
+{
+    "app_title": "Master Search - Outil de Recherche Professionnel",
+    "menu_file": "Fichier",
+    "menu_help": "Aide",
+    "menu_exit": "Quitter",
+    "menu_about": "À propos",
+    "menu_open_reports": "Ouvrir Dossier Rapports",
+    
+    "btn_search": "🔍 Démarrer Recherche",
+    "btn_browse": "Parcourir",
+    "btn_stop": "⏹️ Arrêter",
+    "btn_clear_log": "Effacer Journal",
+    "btn_reset": "Réinitialiser",
+    "btn_save_settings": "Sauvegarder Paramètres",
+    
+    "label_search_terms": "🔤 Termes de Recherche:",
+    "label_search_directory": "📁 Répertoire de Recherche:",
+    "label_search_path": "📁 Répertoire de Recherche:",
+    "label_file_pattern": "📄 Modèle de Fichier:",
+    "label_max_workers": "⚡ Max Threads:",
+    "label_search_mode": "🔍 Mode de Recherche:",
+    "label_categories": "📂 Catégories:",
+    "label_mode": "🔍 Mode de Recherche:",
+    "label_cpu_cores": "⚡ Cœurs CPU:",
+    
+    "hint_multiple_terms": "Séparer plusieurs termes avec des espaces",
+    "options_title": "🔧 Options de Recherche",
+    
+    "mode_and": "ET (tous les termes)",
+    "mode_or": "OU (n'importe quel terme)",
+    
+    "include_content": "Rechercher contenu fichiers",
+    "case_sensitive": "Sensible à la casse",
+    "use_regex": "Utiliser expressions régulières",
+    
+    "available": "disponible",
+    
+    "btn_show_last_report": "📄 Afficher Dernier Rapport",
+    "btn_report_folder": "📂 Dossier Rapports",
+    "btn_info": "ℹ️ Info",
+    
+    "search_mode_and": "ET (tous les termes)",
+    "search_mode_or": "OU (n'importe quel terme)",
+    
+    "category_code": "📝 Code",
+    "category_documents": "📄 Documents",
+    "category_config": "⚙️ Configuration",
+    "category_data": "📊 Données",
+    "category_media": "🎨 Médias",
+    "category_archives": "📦 Archives",
+    "category_all": "🌐 Tous Types de Fichiers",
+    
+    "checkbox_case_sensitive": "Sensible à la casse",
+    "checkbox_regex": "Utiliser expressions régulières",
+    "checkbox_content_search": "Rechercher contenu fichiers",
+    
+    "status_ready": "Prêt pour recherche",
+    "status_searching": "Recherche en cours...",
+    "status_completed": "Recherche terminée",
+    "status_stopped": "Recherche arrêtée",
+    
+    "progress_files": "Fichiers:",
+    "progress_matches": "Correspondances:",
+    "progress_speed": "Vitesse:",
+    
+    "tooltip_search_terms": "Saisir termes de recherche séparés par espaces",
+    "tooltip_search_directory": "Sélectionner le répertoire à rechercher",
+    "tooltip_file_pattern": "Modèle de fichier (ex. *.py, *.txt, *)",
+    "tooltip_max_workers": "Nombre de threads parallèles (1-16)",
+    "tooltip_search_mode": "ET: tous les termes doivent être trouvés\nOU: au moins un terme",
+    "tooltip_case_sensitive": "Distinguer majuscules et minuscules",
+    "tooltip_regex": "Motifs de recherche avancés avec expressions régulières",
+    "tooltip_content_search": "Rechercher contenu fichiers en plus des noms",
+    
+    "error": "Erreur",
+    "warning": "Avertissement",
+    "info": "Information",
+    "success": "Succès",
+    
+    "error_no_terms": "Veuillez saisir au moins un terme de recherche.",
+    "error_no_search_terms": "Veuillez saisir au moins un terme de recherche.",
+    "error_no_directory": "Veuillez sélectionner un répertoire de recherche valide.",
+    "error_invalid_regex": "Expression régulière invalide: {}",
+    "error_search_failed": "Échec de la recherche: {}",
+    
+    "dialog_select_directory": "Sélectionner répertoire pour recherche",
+    "dialog_search_running": "Recherche déjà en cours. Voulez-vous l'arrêter?",
+    "dialog_confirm_stop": "Confirmation",
+    "dialog_yes": "Oui",
+    "dialog_no": "Non",
+    
+    "dlg_browse_title": "Sélectionner Répertoire de Recherche",
+    
+    "about_title": "À propos de Master Search",
+    "about_text": "Master Search v{}\n\nOutil de Recherche Professionnel\n\nAuteur: Loony2392\nEmail: info@loony-tech.de\nEntreprise: LOONY-TECH\n\n© 2025 LOONY-TECH\nTous droits réservés.",
+    
+    "log_search_started": "🚀 Recherche démarrée dans: {}",
+    "log_start_search": "🚀 Démarrage de la recherche...",
+    "log_search_completed": "✅ Recherche terminée! {} correspondances trouvées dans {} fichiers.",
+    "log_search_stopped": "⏹️ Recherche arrêtée par l'utilisateur.",
+    "log_report_generated": "📄 Rapport HTML créé: {}",
+    "log_report_opened": "🌐 Rapport ouvert dans navigateur.",
+    "log_settings_saved": "💾 Paramètres sauvegardés.",
+    "log_settings_loaded": "📂 Paramètres chargés.",
+    
+    "company_label": "© 2025 LOONY-TECH",
+    
+    "update_available": "Mise à jour disponible",
+    "update_message": "Une nouvelle version de Master Search est disponible!\n\nVersion actuelle: {}\nNouvelle version: {}\n\nVoulez-vous ouvrir la page de mise à jour?",
+    "update_yes": "Oui, ouvrir",
+    "update_no": "Plus tard",
+    "update_ignore": "Ignorer cette version",
+    
+    "placeholder_search_terms": "ex. TODO FIXME ERROR",
+    "placeholder_file_pattern": "ex. *.py *.txt *.md",
+    
+    "footer_results": "Résultats:",
+    "footer_time": "Temps:",
+    "footer_speed": "Vitesse:",
+    
+    "units_files_per_second": "fichiers/sec",
+    "units_seconds": "secondes",
+    "units_minutes": "minutes",
+    "units_hours": "heures",
+    
+    "report_title": "Master Search - Résultats de Recherche",
+    "report_summary": "Résumé",
+    "report_details": "Résultats Détaillés",
+    "report_file_matches": "Correspondances Fichiers",
+    "report_folder_matches": "Correspondances Dossiers",
+    "report_content_matches": "Correspondances Contenu",
+    "report_generated": "Rapport généré le",
+    "report_search_terms": "Termes de recherche",
+    "report_search_directory": "Répertoire de recherche",
+    "report_total_files": "Total fichiers",
+    "report_matches_found": "Correspondances trouvées",
+    "report_search_time": "Temps de recherche",
+    
+    "category_breakdown": "Répartition par Catégorie",
+    "file_type_breakdown": "Distribution par Type de Fichier",
+    
+    "error_no_search_path": "Veuillez sélectionner un répertoire de recherche valide.",
+    "error_path_not_exist": "Le répertoire spécifié n'existe pas.",
+    "no_report_warning_msg": "Aucun résultat de recherche trouvé à afficher. Veuillez d'abord effectuer une recherche.",
+    "no_report_warning_title": "Aucun Rapport Disponible",
+    "search_complete_title": "Recherche Terminée",
+    "search_finished": "Recherche terminée avec succès.",
+    "search_interrupted": "La recherche a été interrompue.",
+    "search_started": "La recherche a été démarrée.",
+    "search_stopped": "La recherche a été arrêtée.",
+    "search_stopped_msg": "La recherche a été arrêtée par l'utilisateur.",
+    "search_stopped_title": "Recherche Arrêtée"
+}

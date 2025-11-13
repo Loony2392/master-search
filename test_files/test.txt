@@ -1,0 +1,5 @@
+Zeile 1: Dies ist die erste Zeile
+Zeile 2: Diese Zeile enthält "test"
+Zeile 3: Noch eine Zeile ohne Treffer
+Zeile 4: Hier ist wieder "test" vorhanden
+Zeile 5: Abschluss

@@ -1,0 +1,153 @@
+{
+    "app_title": "Master Search - Professionelles Datei-Suchwerkzeug",
+    "menu_file": "Datei",
+    "menu_help": "Hilfe",
+    "menu_exit": "Beenden",
+    "menu_about": "Über",
+    "menu_open_reports": "Report-Ordner öffnen",
+    
+    "btn_search": "🔍 Suche starten",
+    "btn_browse": "Durchsuchen",
+    "btn_stop": "⏹️ Stopp",
+    "btn_clear_log": "Log löschen",
+    "btn_reset": "Zurücksetzen",
+    "btn_save_settings": "Einstellungen speichern",
+    
+    "label_search_terms": "🔤 Suchbegriffe:",
+    "label_search_directory": "📁 Suchverzeichnis:",
+    "label_search_path": "📁 Suchverzeichnis:",
+    "label_file_pattern": "📄 Dateimuster:",
+    "label_max_workers": "⚡ Max. Threads:",
+    "label_search_mode": "🔍 Suchmodus:",
+    "label_categories": "📂 Kategorien:",
+    "label_mode": "🔍 Suchmodus:",
+    "label_cpu_cores": "⚡ CPU Kerne:",
+    
+    "hint_multiple_terms": "Mehrere Begriffe mit Leerzeichen trennen",
+    "options_title": "🔧 Suchoptionen",
+    
+    "mode_and": "UND (alle Begriffe)",
+    "mode_or": "ODER (beliebige Begriffe)",
+    
+    "include_content": "Dateiinhalt durchsuchen",
+    "case_sensitive": "Groß-/Kleinschreibung beachten",
+    "use_regex": "Reguläre Ausdrücke verwenden",
+    
+    "available": "verfügbar",
+    
+    "btn_show_last_report": "📄 Letzten Report anzeigen",
+    "btn_report_folder": "📂 Report-Ordner",
+    "btn_info": "ℹ️ Info",
+    
+    "search_mode_and": "UND (alle Begriffe)",
+    "search_mode_or": "ODER (beliebige Begriffe)",
+    
+    "category_code": "📝 Code",
+    "category_documents": "📄 Dokumente",
+    "category_config": "⚙️ Konfiguration",
+    "category_data": "📊 Daten",
+    "category_media": "🎨 Medien",
+    "category_archives": "📦 Archive",
+    "category_all": "🌐 Alle Dateitypen",
+    
+    "checkbox_case_sensitive": "Groß-/Kleinschreibung beachten",
+    "checkbox_regex": "Reguläre Ausdrücke verwenden",
+    "checkbox_content_search": "Dateiinhalt durchsuchen",
+    
+    "status_ready": "Bereit für Suche",
+    "status_searching": "Suche läuft...",
+    "status_completed": "Suche abgeschlossen",
+    "status_stopped": "Suche gestoppt",
+    
+    "progress_files": "Dateien:",
+    "progress_matches": "Treffer:",
+    "progress_speed": "Geschwindigkeit:",
+    
+    "tooltip_search_terms": "Geben Sie Suchbegriffe getrennt durch Leerzeichen ein",
+    "tooltip_search_directory": "Wählen Sie das Verzeichnis zum Durchsuchen",
+    "tooltip_file_pattern": "Dateimuster (z.B. *.py, *.txt, *)",
+    "tooltip_max_workers": "Anzahl paralleler Threads (1-16)",
+    "tooltip_search_mode": "UND: alle Begriffe müssen gefunden werden\nODER: mindestens ein Begriff",
+    "tooltip_case_sensitive": "Unterscheidung zwischen Groß- und Kleinbuchstaben",
+    "tooltip_regex": "Erweiterte Suchmuster mit regulären Ausdrücken",
+    "tooltip_content_search": "Durchsucht Dateiinhalte zusätzlich zu Dateinamen",
+    
+    "error": "Fehler",
+    "warning": "Warnung",
+    "info": "Information",
+    "success": "Erfolg",
+    
+    "error_no_terms": "Bitte geben Sie mindestens einen Suchbegriff ein.",
+    "error_no_search_terms": "Bitte geben Sie mindestens einen Suchbegriff ein.",
+    "error_no_directory": "Bitte wählen Sie ein gültiges Suchverzeichnis.",
+    "error_invalid_regex": "Ungültiger regulärer Ausdruck: {}",
+    "error_search_failed": "Suche fehlgeschlagen: {}",
+    
+    "dialog_select_directory": "Verzeichnis für Suche auswählen",
+    "dialog_search_running": "Suche läuft bereits. Möchten Sie sie stoppen?",
+    "dialog_confirm_stop": "Bestätigung",
+    "dialog_yes": "Ja",
+    "dialog_no": "Nein",
+    
+    "dlg_browse_title": "Suchverzeichnis auswählen",
+    
+    "about_title": "Über Master Search",
+    "about_text": "Master Search v{}\n\nProfessionelles Datei-Suchwerkzeug\n\nAutor: Loony2392\nE-Mail: info@loony-tech.de\nFirma: LOONY-TECH\n\n© 2025 LOONY-TECH\nAlle Rechte vorbehalten.",
+    
+    "log_search_started": "🚀 Suche gestartet in: {}",
+    "log_start_search": "🚀 Suche wird gestartet...",
+    "log_search_completed": "✅ Suche abgeschlossen! {} Treffer in {} Dateien gefunden.",
+    "log_search_stopped": "⏹️ Suche vom Benutzer gestoppt.",
+    "log_report_generated": "📄 HTML-Report erstellt: {}",
+    "log_report_opened": "🌐 Report im Browser geöffnet.",
+    "log_settings_saved": "💾 Einstellungen gespeichert.",
+    "log_settings_loaded": "📂 Einstellungen geladen.",
+    
+    "company_label": "© 2025 LOONY-TECH",
+    
+    "update_available": "Update verfügbar",
+    "update_message": "Eine neue Version von Master Search ist verfügbar!\n\nAktuelle Version: {}\nNeue Version: {}\n\nMöchten Sie die Update-Seite öffnen?",
+    "update_yes": "Ja, öffnen",
+    "update_no": "Später",
+    "update_ignore": "Diese Version ignorieren",
+    
+    "placeholder_search_terms": "z.B. TODO FIXME ERROR",
+    "placeholder_file_pattern": "z.B. *.py *.txt *.md",
+    
+    "footer_results": "Ergebnisse:",
+    "footer_time": "Zeit:",
+    "footer_speed": "Geschwindigkeit:",
+    
+    "units_files_per_second": "Dateien/Sek.",
+    "units_seconds": "Sekunden",
+    "units_minutes": "Minuten",
+    "units_hours": "Stunden",
+    
+    "report_title": "Master Search - Suchergebnisse",
+    "report_summary": "Zusammenfassung",
+    "report_details": "Detailergebnisse",
+    "report_file_matches": "Datei-Treffer",
+    "report_folder_matches": "Ordner-Treffer",
+    "report_content_matches": "Inhalt-Treffer",
+    "report_generated": "Report erstellt am",
+    "report_search_terms": "Suchbegriffe",
+    "report_search_directory": "Suchverzeichnis",
+    "report_total_files": "Dateien insgesamt",
+    "report_matches_found": "Treffer gefunden",
+    "report_search_time": "Suchzeit",
+    
+    "category_breakdown": "Kategorien-Aufschlüsselung",
+    "file_type_breakdown": "Dateityp-Verteilung",
+    
+    "error_no_search_path": "Bitte wählen Sie ein gültiges Suchverzeichnis.",
+    "error_path_not_exist": "Das angegebene Verzeichnis existiert nicht.",
+    "no_report_warning_msg": "Keine Suchergebnisse zum Anzeigen gefunden. Führen Sie zuerst eine Suche durch.",
+    "no_report_warning_title": "Kein Report verfügbar",
+    "search_complete_title": "Suche abgeschlossen",
+    "search_finished": "Suche erfolgreich beendet.",
+    "search_interrupted": "Suche wurde unterbrochen.",
+    "search_started": "Suche wurde gestartet.",
+    "search_stopped": "Suche wurde gestoppt.",
+    "search_stopped_msg": "Die Suche wurde vom Benutzer gestoppt.",
+    "search_stopped_title": "Suche gestoppt"
+}

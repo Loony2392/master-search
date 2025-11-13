@@ -1,0 +1,97 @@
+# Master Search - Requirements
+# =============================
+# Python-Abhängigkeiten für das Master Search Tool
+# Author: Bastian Alexander Kolb
+# Version: 1.0.0
+# Updated: November 2025
+
+# Core Dependencies
+# -----------------
+
+# Colorama - Cross-platform colored terminal text
+# Wird für die farbige Konsolen-Ausgabe verwendet
+colorama>=0.4.6
+
+# Setup tools für Package-Installation
+setuptools>=68.0.0
+
+# Performance Dependencies (Optional aber empfohlen)
+# ================================================
+
+# PSUtil - System und Prozess-Informationen
+# Wird für optimale Worker-Anzahl und Performance-Monitoring verwendet
+psutil>=5.9.0
+
+# Optional Dependencies (für erweiterte Funktionen)
+# ------------------------------------------------
+
+# Für erweiterte HTML-Template-Funktionen (falls später benötigt)
+# jinja2>=3.1.2
+
+# Für JSON-Konfigurationsdateien (falls später benötigt)
+# pyyaml>=6.0.1
+
+# Für erweiterte Regex-Funktionen (falls später benötigt)
+# regex>=2023.10.3
+
+# Für erweiterte Encoding-Erkennung (optional)
+# chardet>=5.2.0
+
+# Performance Notes:
+# =================
+# 1. psutil wird für optimale Performance empfohlen, ist aber optional
+# 2. Das Tool funktioniert auch ohne psutil mit reduzierten Performance-Features
+# 3. Multiprocessing und Threading sind Teil der Python Standard Library
+# 4. Für maximale Performance: pip install colorama psutil
+
+# Optional Dependencies (für erweiterte Funktionen)
+# ------------------------------------------------
+
+# Für erweiterte HTML-Template-Funktionen (falls später benötigt)
+# jinja2>=3.1.2
+
+# Für JSON-Konfigurationsdateien (falls später benötigt)
+# pyyaml>=6.0.1
+
+# Für erweiterte Regex-Funktionen (falls später benötigt)
+# regex>=2023.10.3
+
+# Für Performance-Monitoring (optional, für Entwicklung)
+# psutil>=5.9.0
+
+# Für erweiterte Encoding-Erkennung (optional)
+# chardet>=5.2.0
+
+# Development Dependencies (nur für Entwicklung)
+# =============================================
+
+# Code-Formatierung
+# black>=23.0.0
+
+# Linting
+# flake8>=6.0.0
+# pylint>=3.0.0
+
+# Type Checking
+# mypy>=1.7.0
+
+# Testing
+# pytest>=7.4.0
+# pytest-cov>=4.1.0
+
+# Documentation
+# sphinx>=7.2.0
+# sphinx-rtd-theme>=1.3.0
+
+# Build Tools
+# setuptools>=68.0.0
+# wheel>=0.41.0
+# twine>=4.0.0
+
+# Notes:
+# ======
+# 1. Nur 'colorama' ist zwingend erforderlich für die Grundfunktionalität
+# 2. Alle anderen Pakete sind optional oder für Entwicklung
+# 3. Das Tool installiert colorama automatisch, falls nicht vorhanden
+# 4. Python 3.7+ wird vorausgesetzt
+# 5. Für minimale Installation: pip install colorama

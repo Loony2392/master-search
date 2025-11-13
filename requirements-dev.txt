@@ -1,0 +1,67 @@
+# Master Search - Development Requirements
+# ========================================
+# Entwicklungsabhängigkeiten für das Master Search Tool
+# Author: Bastian Alexander Kolb
+
+# Include production requirements
+-r requirements-minimal.txt
+
+# Code Quality Tools
+# ------------------
+black>=23.0.0                  # Code formatter
+flake8>=6.0.0                  # Linting
+pylint>=3.0.0                  # Advanced linting
+isort>=5.12.0                  # Import sorting
+bandit>=1.7.5                  # Security linting
+
+# Type Checking
+# -------------
+mypy>=1.7.0                    # Static type checker
+types-requests>=2.31.0         # Type stubs for requests
+
+# Testing Framework
+# -----------------
+pytest>=7.4.0                  # Testing framework
+pytest-cov>=4.1.0              # Coverage reporting
+pytest-mock>=3.12.0            # Mocking utilities
+pytest-xdist>=3.5.0            # Parallel test execution
+
+# Documentation Tools
+# -------------------
+sphinx>=7.2.0                  # Documentation generator
+sphinx-rtd-theme>=1.3.0        # Read the Docs theme
+sphinx-autodoc-typehints>=1.25.0  # Type hints in docs
+
+# Build & Distribution
+# --------------------
+build>=1.0.0                   # Build backend
+setuptools>=68.0.0             # Package setup
+wheel>=0.41.0                  # Wheel format
+twine>=4.0.0                   # PyPI upload
+
+# MSI Build Tools
+# ---------------
+cx_Freeze>=6.15.0              # MSI package creation
+pywin32>=306                   # Windows integration (required for MSI)
+
+# Development Utilities
+# ---------------------
+pre-commit>=3.6.0              # Git hooks
+tox>=4.11.0                    # Testing across environments
+coverage>=7.3.0                # Coverage analysis
+
+# Optional Performance Tools
+# --------------------------
+psutil>=5.9.0                  # System monitoring
+memory-profiler>=0.61.0        # Memory profiling
+line-profiler>=4.1.0           # Line-by-line profiling
+
+# Optional Enhanced Features
+# -------------------------
+chardet>=5.2.0                 # Character encoding detection
+regex>=2023.10.3               # Advanced regex support
+pyyaml>=6.0.1                  # YAML configuration files
+jinja2>=3.1.2                  # Advanced templating
+
+# Installation:
+# pip install -r requirements-dev.txt

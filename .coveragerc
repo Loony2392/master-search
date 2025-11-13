@@ -1,0 +1,39 @@
+[run]
+# Coverage.py Konfiguration
+
+branch = True
+source = .
+omit =
+    */tests/*
+    */site-packages/*
+    */distutils/*
+    setup.py
+    build_msi.py
+    cli_main.py
+    gui_main.py
+
+[report]
+# Exclude lines from coverage
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod
+    @abc.abstractmethod
+    except ImportError:
+    if sys.version_info
+
+# Mindestabdeckung
+fail_under = 70
+precision = 2
+skip_covered = False
+
+[html]
+directory = htmlcov
+title = Master Search - Code Coverage Report
+
+[xml]
+output = coverage.xml

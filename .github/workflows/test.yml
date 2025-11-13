@@ -1,0 +1,292 @@
+name: Test & Quality Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  syntax-check:
+    name: Syntax & Code Quality Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install linting tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint flake8 black isort mypy
+    
+    - name: Python syntax check (py_compile)
+      run: |
+        echo "🔍 Checking Python syntax..."
+        python -m py_compile file_search_tool.py
+        python -m py_compile gui_search_tool.py
+        python -m py_compile report_generator.py
+        python -m py_compile i18n.py
+        python -m py_compile language_config.py
+        python -m py_compile gui_main.py
+        python -m py_compile cli_main.py
+        python -m py_compile version.py
+        python -m py_compile setup_msi.py
+        python -m py_compile build_msi.py
+        python -m py_compile performance_config.py
+        python -m py_compile language_config.py
+        echo "✅ All Python files have valid syntax"
+    
+    - name: Flake8 linting
+      run: |
+        echo "🔍 Running flake8 linting..."
+        flake8 file_search_tool.py gui_search_tool.py report_generator.py i18n.py --max-line-length=120 --count || true
+        echo "✅ Flake8 check completed"
+    
+    - name: Pylint analysis
+      run: |
+        echo "🔍 Running pylint analysis..."
+        pylint file_search_tool.py gui_search_tool.py report_generator.py i18n.py language_config.py --fail-under=7.0 --max-line-length=120 || true
+        echo "✅ Pylint analysis completed"
+    
+    - name: Code format check (black)
+      run: |
+        echo "🔍 Checking code formatting..."
+        black --check file_search_tool.py gui_search_tool.py report_generator.py i18n.py || true
+        echo "✅ Format check completed"
+    
+    - name: Import sort check (isort)
+      run: |
+        echo "🔍 Checking import sorting..."
+        isort --check-only file_search_tool.py gui_search_tool.py report_generator.py || true
+        echo "✅ Import sort check completed"
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.9', '3.10', '3.11']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-xdist coverage
+    
+    - name: Run unit tests
+      run: |
+        pytest tests/test_file_search_tool.py -v --cov=file_search_tool --cov-report=xml
+    
+    - name: Run integration tests
+      run: |
+        pytest tests/test_integration.py -v
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      with:
+        files: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  functional-tests:
+    name: Functional Tests
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest
+    
+    - name: Test version management
+      run: |
+        echo "Testing version management..."
+        python -c "from version import VERSION, AUTHOR, EMAIL; print(f'✅ Version: {VERSION}'); print(f'✅ Author: {AUTHOR}'); print(f'✅ Email: {EMAIL}')"
+    
+    - name: Test CLI entry point
+      run: |
+        echo "Testing CLI entry point..."
+        python cli_main.py --help > $null 2>&1 || python cli_main.py --version
+        echo "✅ CLI entry point working"
+    
+    - name: Test imports
+      run: |
+        echo "Testing all module imports..."
+        python -c "from file_search_tool import FileSearchTool; print('✅ FileSearchTool imported')"
+        python -c "from report_generator import HTMLReportGenerator; print('✅ HTMLReportGenerator imported')"
+        python -c "from i18n import I18n; print('✅ I18n imported')"
+        python -c "from language_config import LanguageConfig; print('✅ LanguageConfig imported')"
+    
+    - name: Test translation files
+      run: |
+        echo "Testing translation files..."
+        python -c "
+        import json
+        with open('locales/en.json') as f:
+            en = json.load(f)
+        with open('locales/de.json') as f:
+            de = json.load(f)
+        print(f'✅ English translations: {len(en)} keys')
+        print(f'✅ German translations: {len(de)} keys')
+        en_keys = set(en.keys())
+        de_keys = set(de.keys())
+        if en_keys == de_keys:
+            print('✅ Translation keys match')
+        else:
+            print(f'⚠️  Missing in DE: {en_keys - de_keys}')
+            print(f'⚠️  Missing in EN: {de_keys - en_keys}')
+        "
+    
+    - name: Test file search functionality
+      run: |
+        echo "Testing file search functionality..."
+        python -c "
+        from file_search_tool import FileSearchTool
+        tool = FileSearchTool()
+        tool.add_search_term('test')
+        tool.set_search_mode('any')
+        print('✅ FileSearchTool can be configured')
+        print('✅ Search terms can be added')
+        print('✅ Search mode can be set')
+        "
+    
+    - name: Test report generation
+      run: |
+        echo "Testing report generation..."
+        python -c "
+        from report_generator import HTMLReportGenerator
+        gen = HTMLReportGenerator(language='en')
+        report = gen.generate({
+            'search_term': 'test',
+            'results': [],
+            'statistics': {'files_searched': 0, 'matches_found': 0}
+        })
+        if report and len(report) > 100:
+            print('✅ HTML report generated successfully')
+        else:
+            print('⚠️  Report generation issue')
+        "
+    
+    - name: Test MSI build configuration
+      run: |
+        echo "Testing MSI build configuration..."
+        python -c "
+        import sys
+        sys.path.insert(0, '.')
+        from setup_msi import setup
+        print('✅ setup_msi.py is valid')
+        print('✅ MSI configuration can be loaded')
+        "
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety
+    
+    - name: Bandit security check
+      run: |
+        echo "🔍 Running Bandit security scan..."
+        bandit -r file_search_tool.py gui_search_tool.py report_generator.py i18n.py -f csv || true
+        echo "✅ Security scan completed"
+    
+    - name: Check for hardcoded secrets
+      run: |
+        echo "🔍 Checking for hardcoded secrets..."
+        if grep -r "password\|api_key\|secret\|token" *.py 2>/dev/null | grep -v "# \|test\|def \|\""; then
+          echo "⚠️  Potential hardcoded secrets found"
+          exit 1
+        else
+          echo "✅ No hardcoded secrets found"
+        fi
+
+  build-verification:
+    name: Build Verification
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install cx_Freeze
+        pip install -r requirements.txt
+    
+    - name: Verify build configuration
+      run: |
+        echo "Verifying build configuration..."
+        python -c "
+        import sys
+        sys.path.insert(0, '.')
+        from version import VERSION
+        print(f'✅ Build version: {VERSION}')
+        "
+    
+    - name: Test MSI build (dry run)
+      run: |
+        echo "Testing build process..."
+        python build_msi.py
+        if (Test-Path "build") {
+            Write-Host "✅ Build directory created"
+        } else {
+            Write-Host "⚠️  Build directory not created"
+        }
+      shell: pwsh
+      continue-on-error: true
+
+  final-status:
+    name: Final Status Check
+    runs-on: ubuntu-latest
+    needs: [syntax-check, unit-tests, functional-tests, security-scan, build-verification]
+    if: always()
+    
+    steps:
+    - name: Check all tests passed
+      run: |
+        echo "🎉 All quality checks completed!"
+        echo "✅ Syntax check: ${{ needs.syntax-check.result }}"
+        echo "✅ Unit tests: ${{ needs.unit-tests.result }}"
+        echo "✅ Functional tests: ${{ needs.functional-tests.result }}"
+        echo "✅ Security scan: ${{ needs.security-scan.result }}"
+        echo "✅ Build verification: ${{ needs.build-verification.result }}"

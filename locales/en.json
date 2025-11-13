@@ -1,0 +1,153 @@
+{
+    "app_title": "Master Search - Professional File Search Tool",
+    "menu_file": "File",
+    "menu_help": "Help",
+    "menu_exit": "Exit",
+    "menu_about": "About",
+    "menu_open_reports": "Open Reports Folder",
+    
+    "btn_search": "🔍 Start Search",
+    "btn_browse": "Browse",
+    "btn_stop": "⏹️ Stop",
+    "btn_clear_log": "Clear Log",
+    "btn_reset": "Reset",
+    "btn_save_settings": "Save Settings",
+    
+    "label_search_terms": "🔤 Search Terms:",
+    "label_search_directory": "📁 Search Directory:",
+    "label_search_path": "📁 Search Directory:",
+    "label_file_pattern": "📄 File Pattern:",
+    "label_max_workers": "⚡ Max Threads:",
+    "label_search_mode": "🔍 Search Mode:",
+    "label_categories": "📂 Categories:",
+    "label_mode": "🔍 Search Mode:",
+    "label_cpu_cores": "⚡ CPU Cores:",
+    
+    "hint_multiple_terms": "Separate multiple terms with spaces",
+    "options_title": "🔧 Search Options",
+    
+    "mode_and": "AND (all terms)",
+    "mode_or": "OR (any terms)",
+    
+    "include_content": "Search file contents",
+    "case_sensitive": "Case sensitive",
+    "use_regex": "Use regular expressions",
+    
+    "available": "available",
+    
+    "btn_show_last_report": "📄 Show Last Report",
+    "btn_report_folder": "📂 Report Folder",
+    "btn_info": "ℹ️ Info",
+    
+    "search_mode_and": "AND (all terms)",
+    "search_mode_or": "OR (any terms)",
+    
+    "category_code": "📝 Code",
+    "category_documents": "📄 Documents",
+    "category_config": "⚙️ Configuration",
+    "category_data": "📊 Data",
+    "category_media": "🎨 Media",
+    "category_archives": "📦 Archives",
+    "category_all": "🌐 All File Types",
+    
+    "checkbox_case_sensitive": "Case sensitive",
+    "checkbox_regex": "Use regular expressions",
+    "checkbox_content_search": "Search file contents",
+    
+    "status_ready": "Ready for search",
+    "status_searching": "Searching...",
+    "status_completed": "Search completed",
+    "status_stopped": "Search stopped",
+    
+    "progress_files": "Files:",
+    "progress_matches": "Matches:",
+    "progress_speed": "Speed:",
+    
+    "tooltip_search_terms": "Enter search terms separated by spaces",
+    "tooltip_search_directory": "Select the directory to search",
+    "tooltip_file_pattern": "File pattern (e.g. *.py, *.txt, *)",
+    "tooltip_max_workers": "Number of parallel threads (1-16)",
+    "tooltip_search_mode": "AND: all terms must be found\nOR: at least one term",
+    "tooltip_case_sensitive": "Distinguish between upper and lower case",
+    "tooltip_regex": "Advanced search patterns with regular expressions",
+    "tooltip_content_search": "Search file contents in addition to filenames",
+    
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Information",
+    "success": "Success",
+    
+    "error_no_terms": "Please enter at least one search term.",
+    "error_no_search_terms": "Please enter at least one search term.",
+    "error_no_directory": "Please select a valid search directory.",
+    "error_invalid_regex": "Invalid regular expression: {}",
+    "error_search_failed": "Search failed: {}",
+    
+    "dialog_select_directory": "Select directory for search",
+    "dialog_search_running": "Search is already running. Do you want to stop it?",
+    "dialog_confirm_stop": "Confirmation",
+    "dialog_yes": "Yes",
+    "dialog_no": "No",
+    
+    "dlg_browse_title": "Select Search Directory",
+    
+    "about_title": "About Master Search",
+    "about_text": "Master Search v{}\n\nProfessional File Search Tool\n\nAuthor: Loony2392\nEmail: info@loony-tech.de\nCompany: LOONY-TECH\n\n© 2025 LOONY-TECH\nAll rights reserved.",
+    
+    "log_search_started": "🚀 Search started in: {}",
+    "log_start_search": "🚀 Starting search...",
+    "log_search_completed": "✅ Search completed! {} matches found in {} files.",
+    "log_search_stopped": "⏹️ Search stopped by user.",
+    "log_report_generated": "📄 HTML report created: {}",
+    "log_report_opened": "🌐 Report opened in browser.",
+    "log_settings_saved": "💾 Settings saved.",
+    "log_settings_loaded": "📂 Settings loaded.",
+    
+    "company_label": "© 2025 LOONY-TECH",
+    
+    "update_available": "Update available",
+    "update_message": "A new version of Master Search is available!\n\nCurrent version: {}\nNew version: {}\n\nDo you want to open the update page?",
+    "update_yes": "Yes, open",
+    "update_no": "Later",
+    "update_ignore": "Ignore this version",
+    
+    "placeholder_search_terms": "e.g. TODO FIXME ERROR",
+    "placeholder_file_pattern": "e.g. *.py *.txt *.md",
+    
+    "footer_results": "Results:",
+    "footer_time": "Time:",
+    "footer_speed": "Speed:",
+    
+    "units_files_per_second": "files/sec",
+    "units_seconds": "seconds",
+    "units_minutes": "minutes",
+    "units_hours": "hours",
+    
+    "report_title": "Master Search - Search Results",
+    "report_summary": "Summary",
+    "report_details": "Detailed Results",
+    "report_file_matches": "File Matches",
+    "report_folder_matches": "Folder Matches",
+    "report_content_matches": "Content Matches",
+    "report_generated": "Report generated on",
+    "report_search_terms": "Search terms",
+    "report_search_directory": "Search directory",
+    "report_total_files": "Total files",
+    "report_matches_found": "Matches found",
+    "report_search_time": "Search time",
+    
+    "category_breakdown": "Category Breakdown",
+    "file_type_breakdown": "File Type Distribution",
+    
+    "error_no_search_path": "Please select a valid search directory.",
+    "error_path_not_exist": "The specified directory does not exist.",
+    "no_report_warning_msg": "No search results found to display. Please run a search first.",
+    "no_report_warning_title": "No Report Available",
+    "search_complete_title": "Search Complete",
+    "search_finished": "Search completed successfully.",
+    "search_interrupted": "Search was interrupted.",
+    "search_started": "Search has been started.",
+    "search_stopped": "Search was stopped.",
+    "search_stopped_msg": "The search was stopped by the user.",
+    "search_stopped_title": "Search Stopped"
+}

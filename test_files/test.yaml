@@ -1,0 +1,9 @@
+version: 1.0
+name: test-project
+description: This is a test project
+dependencies:
+  - test-lib-1
+  - test-lib-2
+settings:
+  test_mode: true
+  test_timeout: 30

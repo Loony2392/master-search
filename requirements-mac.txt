@@ -1,0 +1,28 @@
+# Master Search - macOS Requirements
+# ===================================
+# Dependencies for Master Search on macOS
+
+# Core dependencies (same as Windows/Linux)
+colorama>=0.4.6
+psutil>=5.9.0
+
+# macOS-specific build dependencies
+py2app>=0.28.8
+altgraph>=0.17.3
+
+# Optional but recommended for macOS
+setuptools>=65.0.0
+wheel>=0.38.0
+
+# Development dependencies (optional)
+pylint>=2.15.0
+pytest>=7.2.0
+black>=22.10.0
+
+# Additional macOS utilities (optional)
+pyobjc-core>=9.0.0
+pyobjc-framework-Cocoa>=9.0.0
+
+# Note: These packages are for building DMG files on macOS
+# For running the application, only colorama and psutil are required
+# py2app is only needed for creating App Bundles (.app files)
