@@ -239,35 +239,41 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
-    - name: Build Windows MSI
+    - name: Build Windows MSI Installer Package
       if: matrix.os == 'windows-latest'
       run: |
-        echo "🏗️ Building Windows MSI installer..."
-        pip install cx_Freeze
+        echo "🏗️ Building Windows Installer Package with PyInstaller..."
         
-        # Run MSI build
-        python build_msi.py
+        # Install PyInstaller and dependencies
+        pip install PyInstaller>=6.1.0
         
-        # Find MSI file in build directory
-        $msiFiles = Get-ChildItem -Path "." -Recurse -Filter "*.msi" | Where-Object { $_.Name -like "*Master Search*" }
-        if ($msiFiles.Count -eq 0) {
-          $msiFiles = Get-ChildItem -Path "build" -Recurse -Filter "*.msi" 2>$null
-        }
-        if ($msiFiles.Count -eq 0) {
-          $msiFiles = Get-ChildItem -Path "dist" -Recurse -Filter "*.msi" 2>$null
-        }
+        # Build both GUI and CLI executables with PyInstaller
+        echo "📦 Building GUI executable..."
+        python -m PyInstaller scripts/gui.spec
         
-        if ($msiFiles.Count -gt 0) {
-          $msiFile = $msiFiles | Select-Object -First 1
-          $newName = "Master_Search_v${{ needs.validate-release.outputs.version }}_Windows.msi"
-          $destPath = "release_builds"
-          New-Item -ItemType Directory -Force -Path $destPath
-          Copy-Item $msiFile.FullName "$destPath\$newName"
-          Write-Host "✅ Windows MSI created: $newName"
-          Write-Host "📦 Size: $([math]::Round((Get-Item "$destPath\$newName").Length / 1MB, 2)) MB"
+        echo "📦 Building CLI executable..."
+        python -m PyInstaller scripts/cli.spec
+        
+        # Create installer package
+        echo "📦 Creating installer package..."
+        python scripts/create_installer_package.py
+        
+        # Find and rename ZIP file
+        if (Test-Path "release_builds/MasterSearch_v*.zip") {
+          $zipFile = Get-ChildItem -Path "release_builds" -Filter "MasterSearch_v*.zip" | Select-Object -First 1
+          $newName = "Master_Search_v${{ needs.validate-release.outputs.version }}_Windows.zip"
+          Rename-Item -Path $zipFile.FullName -NewName $newName
+          $size = [math]::Round((Get-Item "release_builds/$newName").Length / 1MB, 2)
+          Write-Host "✅ Windows installer package created: $newName"
+          Write-Host "📦 Size: $size MB"
+          
+          # Also create SHA256 checksum
+          $hash = (Get-FileHash "release_builds/$newName" -Algorithm SHA256).Hash
+          Add-Content -Path "release_builds/$newName.sha256" -Value "$hash  $newName"
+          Write-Host "🔐 SHA256 checksum created"
         } else {
-          Write-Error "❌ MSI file not found. Checking available files:"
-          Get-ChildItem -Recurse -Filter "*.msi" | ForEach-Object { Write-Host "Found: $($_.FullName)" }
+          Write-Error "❌ Installer package not found"
+          Get-ChildItem -Path "release_builds" -Recurse
           exit 1
         }
       shell: pwsh
