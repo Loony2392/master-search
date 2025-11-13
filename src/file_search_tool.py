@@ -97,23 +97,159 @@ class FileSearchTool:
         self.results = []
         self.verbose = verbose  # Flag for verbose console output
         self.supported_text_extensions = {
-            # Web & Markup
-            '.html', '.htm', '.xml', '.json',
-            # Scripting & Programming
-            '.py', '.js', '.jsx', '.ts', '.tsx', '.java', '.cpp', '.c', '.h', '.hpp', '.cs', 
-            '.php', '.rb', '.go', '.rs', '.sh', '.bash', '.ps1', '.bat', '.kt', '.scala', '.swift',
+            # Programming Languages
+            '.py', '.pyc', '.pyo', '.pyd',
+            '.java', '.class', '.jar',
+            '.js', '.jsx', '.mjs', '.cjs',
+            '.ts', '.tsx',
+            '.cpp', '.cc', '.cxx', '.c', '.h', '.hpp', '.hxx', '.hh',
+            '.cs', '.csproj',
+            '.swift', '.swiftpm',
+            '.go',
+            '.rs', '.rlib',
+            '.rb', '.rbw', '.rake', '.gemspec',
+            '.php', '.php3', '.php4', '.php5', '.php7', '.php8', '.phtml',
+            '.scala', '.sc',
+            '.kt', '.kts',
+            '.sh', '.bash', '.zsh', '.fish', '.ksh',
+            '.ps1', '.psm1', '.psd1',
+            '.bat', '.cmd', '.com',
+            '.pl', '.pm',
+            '.lua',
+            '.r', '.rmd', '.rnotebook',
+            '.jl',
+            '.dart',
+            '.elm',
+            '.clj', '.cljs', '.cljc', '.edn',
+            '.ex', '.exs',
+            '.erl', '.hrl',
+            '.hs', '.lhs',
+            '.ml', '.mli',
+            '.fs', '.fsi', '.fsx',
+            '.pas', '.pp',
+            '.asm', '.s',
+            '.vb', '.vbs', '.vbproj',
+            '.groovy', '.gradle',
+            
+            # Markup & Documentation
+            '.md', '.markdown',
+            '.rst', '.rest',
+            '.adoc', '.asciidoc',
+            '.textile',
+            '.rdoc',
+            '.org',
+            '.wiki', '.mediawiki',
+            '.mdown', '.mkd',
+            '.tex', '.latex',
+            
+            # Web & Data
+            '.html', '.htm', '.xhtml',
+            '.xml', '.xsd', '.xsl', '.xslt',
+            '.json', '.jsonl', '.ndjson',
+            '.yaml', '.yml',
+            '.toml',
+            '.csv', '.tsv', '.dsv',
+            '.sql',
+            
+            # Configuration Files
+            '.conf', '.config', '.cfg', '.cnf', '.ini', '.inf',
+            '.env', '.envrc',
+            '.properties', '.gradle',
+            '.dockerfile', '.docker-compose',
+            '.compose',
+            '.kubernetes', '.k8s',
+            '.terraform', '.tf', '.tfvars',
+            '.ansible', '.playbook',
+            '.chef', '.recipe',
+            '.puppet', '.pp',
+            '.saltstack', '.sls',
+            '.nix',
+            '.vcxproj', '.csproj', '.fsproj', '.vbproj',
+            '.targets', '.props',
+            '.vimrc', '.vim',
+            '.emacs',
+            '.gitconfig', '.gitignore', '.gitattributes',
+            '.editorconfig',
+            '.eslintrc', '.prettierrc', '.stylelintrc',
+            '.npmrc', '.yarnrc', '.bowerrc',
+            '.htaccess',
+            '.nginx', '.apache',
+            '.httpd',
+            '.bash_profile', '.bashrc', '.profile',
+            '.zshrc', '.zsh_profile',
+            '.fishrc',
+            '.screenrc', '.tmuxconf',
+            
             # Styling
             '.css', '.scss', '.sass', '.less',
-            # Data & Configuration
-            '.csv', '.yml', '.yaml', '.toml', '.ini', '.cfg', '.conf', '.config', '.env', '.sql',
-            # Documentation
-            '.txt', '.md', '.rst',
-            # Office Documents
-            '.doc', '.docx', '.pdf', '.xls', '.xlsx', '.ppt', '.pptx', '.odt', '.rtf',
+            '.vue', '.svelte', '.astro', '.qvp',
+            '.pug', '.jade',
+            '.handlebars', '.hbs',
+            '.ejs', '.erb',
+            '.haml',
+            '.slim',
+            '.blade',
+            '.jinja', '.jinja2',
+            '.liquid',
+            '.mustache',
+            '.twig',
+            '.freemarker', '.ftl',
+            '.velocity', '.vm',
+            
+            # Office & Documents
+            '.pdf', '.doc', '.docx', '.docm',
+            '.odt', '.ott',
+            '.rtf',
+            '.pages',
+            '.txt', '.text',
+            '.wps',
+            '.wpd',
+            
+            # Spreadsheets
+            '.xls', '.xlsx', '.xlsm', '.xlt',
+            '.ods', '.ots',
+            '.numbers',
+            '.gnumeric',
+            '.xlam', '.xltx', '.xltm',
+            
+            # Presentations
+            '.ppt', '.pptx', '.pptm', '.potx',
+            '.odp', '.otp',
+            '.key',
+            '.gslides',
+            '.pps', '.ppsx',
+            
+            # Data Formats
+            '.protobuf', '.proto',
+            '.avro',
+            '.msgpack',
+            '.cbor',
+            '.bson',
+            '.ion',
+            '.s_expr',
+            
             # Databases
-            '.db', '.sqlite',
+            '.sqlite', '.db', '.mdb',
+            '.dbf', '.dbc',
+            '.accdb', '.laccdb',
+            '.ibd', '.frm', '.myd',
+            
+            # Logs & System
+            '.log', '.logs',
+            '.trace', '.debug',
+            '.out',
+            '.syslog',
+            
+            # Archives (for text inspection)
+            '.tar', '.gz', '.gzip', '.tgz',
+            '.bz2', '.bzip2',
+            '.xz',
+            '.z',
+            
             # Other
-            '.log', '.edcx', '.vue', '.svelte', '.properties'
+            '.edcx', '.properties',
+            '.m3u', '.m3u8', '.pls',
+            '.sub', '.srt', '.ass', '.ssa', '.vtt',
         }
         # Farben für verschiedene Betriebssysteme
         self.colors = self._init_colors()
