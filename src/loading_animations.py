@@ -5,9 +5,21 @@ Master Search - Modern Loading Animation System
 ==============================================
 Beautiful, smooth loading animations for GUI components
 
+Available Loader Types:
+- HorizontalPulseLoader: Expanding horizontal line animation
+- SpinningLoader: Smooth rotating spinner
+- PulsingDots: Pulsing dots in sequence
+- ModernBounceLoader: Smooth bouncing animation with easing
+- ModernProgressBar: Advanced progress bar with multiple styles:
+  * "gradient": Moving gradient effect
+  * "neon": Neon glow effect
+  * "smooth": Smooth wave animation
+  * "multi": Multiple color segments
+- LoadingOverlay: Full-screen loading overlay with various animations
+
 Author: Loony2392
 Email: info@loony-tech.de
-Version: 2025.11.10
+Version: 2025.11.13
 """
 
 import tkinter as tk
@@ -121,12 +133,13 @@ class HorizontalPulseLoader:
 class ModernProgressBar:
     """Modern, animated progress bar with gradient and pulse effects."""
     
-    def __init__(self, parent, width=400, height=8, color="#00EEFF", bg_color="#E8E8E8"):
+    def __init__(self, parent, width=400, height=8, color="#00EEFF", bg_color="#E8E8E8", style="gradient"):
         self.parent = parent
         self.width = width
         self.height = height
         self.color = color
         self.bg_color = bg_color
+        self.style = style  # "gradient", "neon", "smooth", "multi"
         
         # Create canvas for custom drawing
         self.canvas = tk.Canvas(parent, width=width, height=height, 
@@ -152,32 +165,114 @@ class ModernProgressBar:
                                    fill=self.bg_color, outline="")
         
         if self.is_indeterminate:
-            # Indeterminate animation - moving gradient
-            gradient_width = 80
-            x_pos = (self.animation_offset % (self.width + gradient_width)) - gradient_width
-            
-            # Create moving highlight effect
-            self.canvas.create_rectangle(x_pos, 0, x_pos + gradient_width, self.height,
-                                       fill=self.color, outline="")
-            
-            # Add glow effect
-            glow_start = max(0, x_pos - 20)
-            glow_end = min(self.width, x_pos + gradient_width + 20)
-            if glow_end > glow_start:
-                self.canvas.create_rectangle(glow_start, 0, glow_end, self.height,
-                                           fill=self.color, outline="", stipple="gray25")
+            if self.style == "gradient":
+                self._draw_gradient_style()
+            elif self.style == "neon":
+                self._draw_neon_style()
+            elif self.style == "smooth":
+                self._draw_smooth_style()
+            elif self.style == "multi":
+                self._draw_multi_style()
+            else:
+                self._draw_gradient_style()
         else:
-            # Determinate progress
-            if self.progress > 0:
-                fill_width = int(self.width * self.progress)
+            self._draw_determinate()
+    
+    def _draw_determinate(self):
+        """Draw determinate progress bar."""
+        if self.progress > 0:
+            fill_width = int(self.width * self.progress)
+            
+            if self.style == "neon":
+                # Neon glow effect
                 self.canvas.create_rectangle(0, 0, fill_width, self.height,
                                            fill=self.color, outline="")
-                
-                # Add shine effect
+                # Glow effect
+                self.canvas.create_rectangle(max(0, fill_width-3), 0, 
+                                           min(self.width, fill_width+3), self.height,
+                                           fill=self.color, outline="")
+            elif self.style == "multi":
+                # Multi-color gradient
+                segment_width = fill_width // 3
+                colors = [self.color, "#00FFAA", "#00EEFF"]
+                for i, col in enumerate(colors):
+                    start = i * segment_width
+                    end = start + segment_width if i < 2 else fill_width
+                    if end > start:
+                        self.canvas.create_rectangle(start, 0, end, self.height,
+                                                   fill=col, outline="")
+            else:
+                # Standard or smooth
+                self.canvas.create_rectangle(0, 0, fill_width, self.height,
+                                           fill=self.color, outline="")
+                # Shine effect
                 if fill_width > 20:
                     shine_x = fill_width - 10
                     self.canvas.create_rectangle(shine_x, 0, shine_x + 2, self.height,
                                                fill="#FFFFFF", outline="", stipple="gray12")
+    
+    def _draw_gradient_style(self):
+        """Original gradient moving effect."""
+        gradient_width = 80
+        x_pos = (self.animation_offset % (self.width + gradient_width)) - gradient_width
+        
+        self.canvas.create_rectangle(x_pos, 0, x_pos + gradient_width, self.height,
+                                   fill=self.color, outline="")
+        
+        glow_start = max(0, x_pos - 20)
+        glow_end = min(self.width, x_pos + gradient_width + 20)
+        if glow_end > glow_start:
+            self.canvas.create_rectangle(glow_start, 0, glow_end, self.height,
+                                       fill=self.color, outline="", stipple="gray25")
+    
+    def _draw_neon_style(self):
+        """Neon glow moving bar style."""
+        bar_width = 60
+        x_pos = (self.animation_offset % (self.width + bar_width))
+        
+        # Outer glow
+        glow_width = 80
+        glow_x = x_pos - (glow_width - bar_width) // 2
+        self.canvas.create_rectangle(glow_x, 0, glow_x + glow_width, self.height,
+                                   fill=self.color, outline="", stipple="gray50")
+        
+        # Bright center
+        self.canvas.create_rectangle(x_pos, 0, x_pos + bar_width, self.height,
+                                   fill=self.color, outline="")
+    
+    def _draw_smooth_style(self):
+        """Smooth wave-like animation."""
+        wave_length = 100
+        wave_pos = (self.animation_offset % (self.width + wave_length))
+        wave_height = self.height // 3
+        
+        # Draw smooth curved wave
+        for x in range(self.width):
+            wave_offset = abs((x - wave_pos) % (self.width + wave_length) - wave_length // 2)
+            alpha = max(0, 1.0 - (wave_offset / (wave_length // 2)))
+            opacity = int(255 * alpha)
+            
+            if alpha > 0.1:
+                self.canvas.create_line(x, 0, x, self.height,
+                                       fill=self.color, width=1)
+    
+    def _draw_multi_style(self):
+        """Multiple color segments moving."""
+        segment_width = 40
+        segment_count = 3
+        total_width = segment_width * segment_count
+        
+        x_pos = self.animation_offset % (self.width + total_width)
+        
+        colors = ["#00EEFF", "#00FFAA", "#00D4FF"]
+        
+        for i in range(segment_count):
+            seg_x = x_pos + (i * segment_width)
+            if seg_x < self.width:
+                self.canvas.create_rectangle(seg_x, 0, 
+                                           min(self.width, seg_x + segment_width), 
+                                           self.height,
+                                           fill=colors[i % len(colors)], outline="")
     
     def set_progress(self, value: float):
         """Set progress value (0.0 to 1.0)."""
@@ -391,6 +486,85 @@ class PulsingDots:
         self.canvas.destroy()
 
 
+class ModernBounceLoader:
+    """Modern bounce animation with smooth easing."""
+    
+    def __init__(self, parent, size=32, color="#00EEFF", bounce_height=30):
+        self.parent = parent
+        self.size = size
+        self.color = color
+        self.bounce_height = bounce_height
+        
+        # Create canvas
+        self.canvas = tk.Canvas(parent, width=size * 3 + 20, height=size + bounce_height + 10,
+                               highlightthickness=0, relief='flat', bg='white')
+        self.canvas.pack()
+        
+        # Animation state
+        self.phase = 0
+        self.animation_running = False
+        self.animation_thread = None
+    
+    def _draw_bounce(self):
+        """Draw bouncing dots with smooth motion."""
+        self.canvas.delete("all")
+        
+        dot_radius = self.size // 2
+        base_y = self.canvas.winfo_height() - dot_radius - 5
+        
+        for i in range(3):
+            # Calculate position with phase offset
+            dot_phase = (self.phase + (i * 120)) % 360
+            
+            # Smooth bounce using sine wave
+            bounce_factor = abs(math.sin(math.radians(dot_phase)))
+            y_offset = bounce_factor * self.bounce_height
+            
+            x = i * (self.size + 10) + dot_radius + 5
+            y = base_y - y_offset
+            
+            # Calculate opacity
+            opacity = 0.5 + 0.5 * bounce_factor
+            
+            # Draw dot with glow effect
+            self.canvas.create_oval(x - dot_radius, y - dot_radius, 
+                                   x + dot_radius, y + dot_radius,
+                                   fill=self.color, outline="")
+            
+            # Add subtle glow
+            glow_radius = int(dot_radius * 1.3)
+            self.canvas.create_oval(x - glow_radius, y - glow_radius,
+                                   x + glow_radius, y + glow_radius,
+                                   fill=self.color, outline="", stipple="gray50")
+    
+    def start(self):
+        """Start the bounce animation."""
+        if not self.animation_running:
+            self.animation_running = True
+            self.animation_thread = threading.Thread(target=self._animate, daemon=True)
+            self.animation_thread.start()
+    
+    def stop(self):
+        """Stop the animation."""
+        self.animation_running = False
+    
+    def _animate(self):
+        """Animation loop."""
+        while self.animation_running:
+            self.phase = (self.phase + 6) % 360
+            
+            try:
+                self.canvas.after_idle(self._draw_bounce)
+                time.sleep(0.03)  # ~30 FPS
+            except:
+                break
+    
+    def destroy(self):
+        """Clean up the loader."""
+        self.stop()
+        self.canvas.destroy()
+
+
 class LoadingOverlay:
     """Modern loading overlay with blur effect simulation."""
     
@@ -424,10 +598,18 @@ class LoadingOverlay:
             self.loader = SpinningLoader(loader_frame, size=48, color="#00A8FF")
         elif loader_type == "dots":
             self.loader = PulsingDots(loader_frame, dots=3, size=12, color="#00A8FF")
+        elif loader_type == "bounce":
+            self.loader = ModernBounceLoader(loader_frame, size=12, color="#00EEFF")
         elif loader_type == "radial":
             self.loader = HorizontalPulseLoader(loader_frame, size=64, color="#00A8FF")
-        else:  # progress bar
-            self.loader = ModernProgressBar(loader_frame, width=200, height=6)
+        elif loader_type == "neon":
+            self.loader = ModernProgressBar(loader_frame, width=200, height=6, style="neon")
+            self.loader.start_indeterminate()
+        elif loader_type == "multi":
+            self.loader = ModernProgressBar(loader_frame, width=200, height=6, style="multi")
+            self.loader.start_indeterminate()
+        else:  # progress bar (standard)
+            self.loader = ModernProgressBar(loader_frame, width=200, height=6, style="gradient")
             self.loader.start_indeterminate()
         
         # Add text
