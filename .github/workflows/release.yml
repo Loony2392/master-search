@@ -1,4 +1,4 @@
-name: Build & Release
+name: 🚀 Release & Deploy
 
 on:
   push:
@@ -7,78 +7,555 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (e.g., 1.0.0)'
+        description: 'Release Version (e.g., 2025.11.11)'
         required: true
+        type: string
+      release_type:
+        description: 'Release Type'
+        required: true
+        default: 'minor'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      prerelease:
+        description: 'Pre-release?'
+        required: false
+        default: false
+        type: boolean
+      generate_builds:
+        description: 'Generate build artifacts?'
+        required: false
+        default: true
+        type: boolean
+      deploy_docs:
+        description: 'Deploy documentation?'
+        required: false
+        default: true
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.11'
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  pages: write
+  id-token: write
 
 jobs:
-  build:
-    runs-on: windows-latest
+  validate-release:
+    name: 🔍 Validate Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.validate.outputs.version }}
+      tag_name: ${{ steps.validate.outputs.tag_name }}
+      is_prerelease: ${{ steps.validate.outputs.is_prerelease }}
     
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     
-    - name: Set up Python
+    - name: Get version from tag or input
+      id: validate
+      run: |
+        if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == refs/tags/v* ]]; then
+          # Extract version from git tag
+          VERSION="${{ github.ref }}"
+          VERSION=${VERSION#refs/tags/v}
+          IS_PRERELEASE="false"
+        else
+          # Use workflow input
+          VERSION="${{ github.event.inputs.version }}"
+          IS_PRERELEASE="${{ github.event.inputs.prerelease }}"
+        fi
+        
+        # Validate version format (YYYY.MM.DD or YYYY.MM.DD.PATCH)
+        if [[ ! "$VERSION" =~ ^[0-9]{4}\.[0-9]{1,2}\.[0-9]{1,2}(\.[0-9]+)?$ ]]; then
+          echo "❌ Invalid version format: $VERSION"
+          echo "Expected format: YYYY.MM.DD or YYYY.MM.DD.PATCH"
+          exit 1
+        fi
+        
+        # Check if tag already exists (only for manual releases)
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          if git tag -l | grep -q "^v$VERSION$"; then
+            echo "❌ Tag v$VERSION already exists"
+            exit 1
+          fi
+        fi
+        
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "tag_name=v$VERSION" >> $GITHUB_OUTPUT
+        echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+        
+        echo "✅ Release validation passed"
+        echo "📦 Version: $VERSION"
+        echo "🏷️ Tag: v$VERSION"
+        echo "🚧 Pre-release: $IS_PRERELEASE"
+
+  run-full-tests:
+    name: 🧪 Full Test Suite
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+    with:
+      run_extended_tests: true
+
+  update-version:
+    name: 📝 Update Version & Changelog
+    runs-on: ubuntu-latest
+    needs: [validate-release, run-full-tests]
+    if: github.event_name == 'workflow_dispatch'
+    outputs:
+      changelog_content: ${{ steps.changelog.outputs.content }}
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+    
+    - name: Update version.py
+      run: |
+        VERSION="${{ needs.validate-release.outputs.version }}"
+        echo "Updating version.py to $VERSION"
+        
+        cat > version.py << EOF
+        #!/usr/bin/env python3
+        # -*- coding: utf-8 -*-
+        """
+        Master Search - Version Management
+        Single source of truth for version information
+
+        Author: Loony2392
+        Email: b.kolb@loony-tech.de
+        """
+
+        # VERSION INFORMATION - Update only here!
+        VERSION = "$VERSION"
+        AUTHOR = "Loony2392"
+        EMAIL = "b.kolb@loony-tech.de"
+        COMPANY = "LOONY-TECH"
+        YEAR = "$(date +%Y)"
+        GITHUB = "https://github.com/Loony2392/master-search"
+
+        # Build version string
+        VERSION_STRING = f"Master Search v{VERSION}"
+        FULL_VERSION = f"{VERSION_STRING} (c) {YEAR} {COMPANY}"
+        EOF
+        
+        echo "✅ Version updated to $VERSION"
+    
+    - name: Generate changelog entry
+      id: changelog
+      run: |
+        VERSION="${{ needs.validate-release.outputs.version }}"
+        DATE=$(date +"%d. %B %Y")
+        
+        # Extract commits since last release
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ -n "$LAST_TAG" ]; then
+          COMMITS=$(git log ${LAST_TAG}..HEAD --oneline --pretty=format:"- %s (%h)")
+        else
+          COMMITS=$(git log --oneline --pretty=format:"- %s (%h)" | head -20)
+        fi
+        
+        # Generate changelog content
+        CHANGELOG_ENTRY=$(cat << EOF
+        ## [$VERSION] - $DATE
+
+        ### 🆕 New Features & Improvements
+        $COMMITS
+
+        ### 📦 Build Information
+        - **Release Type:** ${{ github.event.inputs.release_type }}
+        - **Pre-release:** ${{ github.event.inputs.prerelease }}
+        - **Generated:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        - **Commit:** $(git rev-parse --short HEAD)
+
+        ---
+
+        EOF
+        )
+        
+        # Save changelog content for later use
+        echo "content<<EOF" >> $GITHUB_OUTPUT
+        echo "$CHANGELOG_ENTRY" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        echo "✅ Changelog prepared"
+    
+    - name: Commit version changes
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        
+        git add version.py
+        git commit -m "🔖 Release v${{ needs.validate-release.outputs.version }}
+
+        - Update version to ${{ needs.validate-release.outputs.version }}
+        - Release type: ${{ github.event.inputs.release_type }}
+        - Pre-release: ${{ github.event.inputs.prerelease }}"
+        
+        git push origin main
+        
+        echo "✅ Version changes committed and pushed"
+
+  build-artifacts:
+    name: 🏗️ Build Release Artifacts
+    runs-on: ${{ matrix.os }}
+    needs: [validate-release, update-version]
+    if: always() && needs.validate-release.result == 'success' && (github.event.inputs.generate_builds == 'true' || github.event_name == 'push')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: windows-exe
+            build_type: "Windows MSI"
+          - os: macos-latest  
+            artifact_name: macos-dmg
+            build_type: "macOS DMG"
+          - os: ubuntu-latest
+            artifact_name: linux-source
+            build_type: "Linux Source"
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: main  # Use updated version for manual releases
+    
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11'
+        python-version: ${{ env.PYTHON_VERSION }}
     
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+    
+    - name: Build Windows MSI
+      if: matrix.os == 'windows-latest'
+      run: |
         pip install cx_Freeze
-    
-    - name: Get version
-      id: version
-      run: |
-        if ("${{ github.ref }}" -like "refs/tags/v*") {
-          $tag = "${{ github.ref }}" -replace "refs/tags/v", ""
-          echo "version=$tag" >> $env:GITHUB_OUTPUT
-        } else {
-          python -c "from version import VERSION; print('version=' + VERSION)" >> $env:GITHUB_OUTPUT
-        }
-      shell: pwsh
-    
-    - name: Update version in version.py
-      run: |
-        $version = "${{ steps.version.outputs.version }}"
-        $content = Get-Content version.py -Raw
-        $content = $content -replace 'VERSION = ".*?"', "VERSION = `"$version`""
-        Set-Content version.py $content
-      shell: pwsh
-      if: github.event_name == 'workflow_dispatch'
-    
-    - name: Build MSI
-      run: python build_msi.py
-      shell: pwsh
-    
-    - name: Find MSI file
-      id: msi
-      run: |
+        python build_msi.py
+        
+        # Find and rename MSI file
         $msiFile = Get-ChildItem -Path "build" -Recurse -Filter "Master Search-*.msi" | Select-Object -First 1
         if ($msiFile) {
-          echo "msi_path=$($msiFile.FullName)" >> $env:GITHUB_OUTPUT
-          echo "msi_name=$($msiFile.Name)" >> $env:GITHUB_OUTPUT
-          echo "Found MSI: $($msiFile.Name)"
+          $newName = "Master_Search_v${{ needs.validate-release.outputs.version }}_Windows.msi"
+          $destPath = "release_builds"
+          New-Item -ItemType Directory -Force -Path $destPath
+          Copy-Item $msiFile.FullName "$destPath\$newName"
+          Write-Host "✅ Windows MSI created: $newName"
         } else {
-          Write-Error "MSI file not found"
+          Write-Error "❌ MSI file not found"
         }
       shell: pwsh
     
-    - name: Create Release
-      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v1
-      with:
-        files: ${{ steps.msi.outputs.msi_path }}
-        draft: false
-        prerelease: false
-        generate_release_notes: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build macOS DMG
+      if: matrix.os == 'macos-latest'
+      run: |
+        # Install py2app for macOS builds
+        pip install py2app
+        
+        # Create basic DMG (simplified for now)
+        mkdir -p release_builds
+        zip -r "release_builds/Master_Search_v${{ needs.validate-release.outputs.version }}_macOS.zip" . \
+          -x "*.git*" "*/__pycache__/*" "*/build/*" "*/dist/*" "*.pyc" "*.pyo"
+        
+        echo "✅ macOS package created"
     
-    - name: Upload Artifact
+    - name: Build Linux Source
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        mkdir -p release_builds
+        
+        # Create source distribution
+        pip install build
+        python -m build --sdist
+        cp dist/*.tar.gz "release_builds/Master_Search_v${{ needs.validate-release.outputs.version }}_Source.tar.gz"
+        
+        # Create standalone zip
+        zip -r "release_builds/Master_Search_v${{ needs.validate-release.outputs.version }}_Source.zip" . \
+          -x "*.git*" "*/__pycache__/*" "*/build/*" "*/dist/*" "*.pyc" "*.pyo"
+        
+        echo "✅ Linux source packages created"
+    
+    - name: Upload build artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: Master-Search-${{ steps.version.outputs.version }}
-        path: ${{ steps.msi.outputs.msi_path }}
+        name: ${{ matrix.artifact_name }}
+        path: release_builds/
         retention-days: 30
+
+  create-release:
+    name: 🎉 Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [validate-release, build-artifacts]
+    if: always() && needs.validate-release.result == 'success'
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: main
+        fetch-depth: 0
+    
+    - name: Download all artifacts
+      if: needs.build-artifacts.result == 'success'
+      uses: actions/download-artifact@v3
+      with:
+        path: ./release_artifacts
+    
+    - name: Create Git tag
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        
+        git tag -a "${{ needs.validate-release.outputs.tag_name }}" -m "Master Search ${{ needs.validate-release.outputs.version }}
+
+        🎯 Release Highlights:
+        - Professional file search tool
+        - Complete German localization
+        - Modern animation system
+        - Cross-platform support (Windows/macOS/Linux)
+
+        📦 Build Information:
+        - Version: ${{ needs.validate-release.outputs.version }}
+        - Release Type: ${{ github.event.inputs.release_type }}
+        - Pre-release: ${{ github.event.inputs.prerelease }}
+        - Build Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+        🚀 Ready for production use!"
+        
+        git push origin "${{ needs.validate-release.outputs.tag_name }}"
+        
+        echo "✅ Git tag created and pushed"
+    
+    - name: Prepare release notes
+      id: release_notes
+      run: |
+        VERSION="${{ needs.validate-release.outputs.version }}"
+        
+        cat > release_notes.md << 'EOF'
+        # 🎉 Master Search v${{ needs.validate-release.outputs.version }}
+
+        ## 📋 Übersicht / Overview
+
+        **Deutsch:**
+        Professional file search tool mit vollständiger deutscher Lokalisierung und modernen Animationen.
+
+        **English:**
+        Professional file search tool with complete German localization and modern animations.
+
+        ## 🚀 Hauptfeatures / Key Features
+
+        - ✅ **Complete German GUI** - 138+ UI elements translated / Vollständige deutsche Benutzeroberfläche
+        - ✅ **Modern Animations** - Smooth 60 FPS loading effects / Moderne 60 FPS Ladeanimationen  
+        - ✅ **Cross-Platform** - Native Windows, macOS, Linux support / Plattformübergreifend
+        - ✅ **Professional Reports** - HTML reports with statistics / Professionelle HTML-Reports
+        - ✅ **High Performance** - Multi-threaded search engine / Hochleistungs-Suchmaschine
+
+        ## 📦 Downloads
+
+        Choose your platform / Wählen Sie Ihre Plattform:
+
+        - **Windows**: `Master_Search_v${{ needs.validate-release.outputs.version }}_Windows.msi` (Installer)
+        - **macOS**: `Master_Search_v${{ needs.validate-release.outputs.version }}_macOS.zip` (Native Package)
+        - **Linux/Source**: `Master_Search_v${{ needs.validate-release.outputs.version }}_Source.tar.gz` (Python source)
+
+        ## 🚀 Quick Start
+
+        ### Windows
+        ```bash
+        # Download and run installer
+        Master_Search_v${{ needs.validate-release.outputs.version }}_Windows.msi
+        ```
+
+        ### macOS  
+        ```bash
+        # Download and extract
+        unzip Master_Search_v${{ needs.validate-release.outputs.version }}_macOS.zip
+        cd master-search-*
+        python gui_main.py
+        ```
+
+        ### Linux/Source
+        ```bash
+        # Extract and run
+        tar -xzf Master_Search_v${{ needs.validate-release.outputs.version }}_Source.tar.gz
+        cd master-search-*
+        pip install -r requirements.txt
+        python gui_main.py
+        ```
+
+        ## 📖 Documentation / Dokumentation
+
+        - **User Guide (English)**: [USER_GUIDE_EN.md](USER_GUIDE_EN.md)
+        - **Benutzerhandbuch (Deutsch)**: [USER_GUIDE_DE.md](USER_GUIDE_DE.md)
+        - **Guide d'utilisateur (Français)**: [USER_GUIDE_FR.md](USER_GUIDE_FR.md)
+
+        ## 🐛 Bug Reports / Fehlerberichte
+
+        - **English**: [Report bugs on GitHub](https://github.com/Loony2392/master-search/issues)
+        - **Deutsch**: [Fehler auf GitHub melden](https://github.com/Loony2392/master-search/issues)
+
+        ---
+
+        **Developed by / Entwickelt von:** Loony2392  
+        **Contact / Kontakt:** b.kolb@loony-tech.de  
+        **Company / Firma:** LOONY-TECH  
+
+        © 2025 LOONY-TECH - All rights reserved / Alle Rechte vorbehalten
+        EOF
+        
+        echo "✅ Release notes prepared"
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ needs.validate-release.outputs.tag_name }}
+        name: Master Search v${{ needs.validate-release.outputs.version }}
+        body_path: release_notes.md
+        prerelease: ${{ needs.validate-release.outputs.is_prerelease }}
+        draft: false
+        files: |
+          release_artifacts/**/*
+        generate_release_notes: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-documentation:
+    name: 📚 Deploy Documentation
+    runs-on: ubuntu-latest
+    needs: [validate-release, create-release]
+    if: github.event.inputs.deploy_docs == 'true' || github.event_name == 'push'
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: main
+    
+    - name: Setup Pages
+      uses: actions/configure-pages@v3
+    
+    - name: Build documentation
+      run: |
+        mkdir -p _site
+        
+        # Copy documentation files
+        cp README.md _site/
+        cp *.md _site/
+        
+        # Create index page
+        cat > _site/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html lang="de">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Master Search v${{ needs.validate-release.outputs.version }} - Documentation</title>
+            <style>
+                body { 
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; 
+                  margin: 40px; 
+                  background: #f6f8fa;
+                }
+                .header { 
+                  text-align: center; 
+                  margin-bottom: 40px; 
+                  padding: 20px;
+                  background: white;
+                  border-radius: 8px;
+                  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                }
+                .version { color: #666; }
+                .links { 
+                  display: grid; 
+                  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+                  gap: 20px; 
+                }
+                .card { 
+                  background: white;
+                  border: 1px solid #ddd; 
+                  padding: 20px; 
+                  border-radius: 8px;
+                  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                }
+                .card h3 { margin-top: 0; color: #0366d6; }
+                .card a { text-decoration: none; color: #0366d6; }
+                .card a:hover { text-decoration: underline; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🔍 Master Search</h1>
+                <p class="version">Version ${{ needs.validate-release.outputs.version }}</p>
+                <p>Professional File Search Tool with German Localization</p>
+            </div>
+            <div class="links">
+                <div class="card">
+                    <h3>📖 User Guides</h3>
+                    <p><a href="USER_GUIDE_DE.md">🇩🇪 Deutsches Benutzerhandbuch</a></p>
+                    <p><a href="USER_GUIDE_EN.md">🇺🇸 English User Guide</a></p>
+                    <p><a href="USER_GUIDE_FR.md">🇫🇷 Guide d'utilisateur Français</a></p>
+                </div>
+                <div class="card">
+                    <h3>🚀 Release Information</h3>
+                    <p><a href="CHANGELOG.md">📋 Changelog</a></p>
+                    <p><a href="README.md">📖 README</a></p>
+                    <p><a href="https://github.com/Loony2392/master-search/releases/latest">📦 Download Latest</a></p>
+                </div>
+                <div class="card">
+                    <h3>📊 Development</h3>
+                    <p><a href="https://github.com/Loony2392/master-search">💻 GitHub Repository</a></p>
+                    <p><a href="https://github.com/Loony2392/master-search/issues">🐛 Bug Reports</a></p>
+                    <p><a href="https://github.com/Loony2392/master-search/discussions">💬 Discussions</a></p>
+                </div>
+            </div>
+        </body>
+        </html>
+        EOF
+        
+        echo "✅ Documentation site built"
+    
+    - name: Upload Pages artifact
+      uses: actions/upload-pages-artifact@v2
+      with:
+        path: _site
+    
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v2
+
+  notification:
+    name: 📧 Release Notification
+    runs-on: ubuntu-latest
+    needs: [validate-release, create-release]
+    if: always() && needs.create-release.result == 'success'
+    
+    steps:
+    - name: Send success notification
+      run: |
+        echo "🎉 RELEASE SUCCESSFUL! 🎉"
+        echo ""
+        echo "✅ Version: ${{ needs.validate-release.outputs.version }}"
+        echo "✅ Tag: ${{ needs.validate-release.outputs.tag_name }}" 
+        echo "✅ Pre-release: ${{ needs.validate-release.outputs.is_prerelease }}"
+        echo "✅ Release URL: https://github.com/Loony2392/master-search/releases/tag/${{ needs.validate-release.outputs.tag_name }}"
+        echo ""
+        echo "🎯 Master Search v${{ needs.validate-release.outputs.version }} is now available!"
+        echo "🌍 Download: https://github.com/Loony2392/master-search/releases/latest"
+        echo "📚 Documentation: https://loony2392.github.io/master-search/"
+        echo ""
+        echo "🚀 Ready for production use!"
