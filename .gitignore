@@ -183,7 +183,7 @@ UPDATE_NOTIFIER_USAGE.md
 icon_content.txt
 
 # MSI Build Setup & temporäre Dateien
-build_msi.py
+# build_msi.py - INCLUDED (actual build script)
 setup_msi.py
 *.msi.bak
 build/exe.win-amd64-*/
