@@ -139,7 +139,7 @@ class ModernProgressBar:
         self.height = height
         self.color = color
         self.bg_color = bg_color
-        self.style = style  # "gradient", "neon", "smooth", "multi", "shimmer"
+        self.style = style  # "gradient", "neon", "neon-pulse", "smooth", "multi", "shimmer"
         
         # Create canvas for custom drawing
         self.canvas = tk.Canvas(parent, width=width, height=height, 
@@ -152,6 +152,7 @@ class ModernProgressBar:
         self.animation_offset = 0
         self.animation_running = False
         self.animation_thread = None
+        self.pulse_phase = 0.0  # For pulsing effects
         
         # Draw initial state
         self._draw_progress()
@@ -169,6 +170,8 @@ class ModernProgressBar:
                 self._draw_gradient_style()
             elif self.style == "neon":
                 self._draw_neon_style()
+            elif self.style == "neon-pulse":
+                self._draw_neon_pulse_style()
             elif self.style == "smooth":
                 self._draw_smooth_style()
             elif self.style == "multi":
@@ -252,6 +255,32 @@ class ModernProgressBar:
         if bar_end > bar_start:
             self.canvas.create_rectangle(bar_start, 0, bar_end, self.height,
                                        fill=self.color, outline="")
+    
+    def _draw_neon_pulse_style(self):
+        """Full-width neon line with pulsing glow effect."""
+        # Calculate pulse intensity (0.3 to 1.0) using sine wave
+        import math
+        pulse = 0.3 + 0.7 * (math.sin(self.pulse_phase * 2 * math.pi) + 1) / 2
+        
+        # Far outer glow (very subtle, pulsing)
+        self.canvas.create_rectangle(0, 0, self.width, self.height,
+                                   fill=self.color, outline="", 
+                                   stipple="gray75" if pulse > 0.6 else "gray85")
+        
+        # Medium glow (more visible, pulsing)
+        self.canvas.create_rectangle(0, 0, self.width, self.height,
+                                   fill=self.color, outline="",
+                                   stipple="gray50" if pulse > 0.5 else "gray62")
+        
+        # Bright neon core (always solid, intensity varies with pulse)
+        self.canvas.create_rectangle(0, 0, self.width, self.height,
+                                   fill=self.color, outline="")
+        
+        # Highlight effect based on pulse phase
+        if pulse > 0.7:
+            self.canvas.create_rectangle(0, 0, self.width, self.height,
+                                       fill="#FFFFFF", outline="", 
+                                       stipple="gray25")
     
     def _draw_smooth_style(self):
         """Smooth wave-like animation."""
@@ -347,6 +376,11 @@ class ModernProgressBar:
             self.animation_offset += 3
             if self.animation_offset > self.width + 100:
                 self.animation_offset = -100
+            
+            # Update pulse phase for pulsing animations
+            self.pulse_phase += 0.05
+            if self.pulse_phase > 1.0:
+                self.pulse_phase = 0.0
             
             try:
                 self.canvas.after_idle(self._draw_progress)
