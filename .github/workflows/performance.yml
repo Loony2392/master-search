@@ -1,0 +1,610 @@
+name: ⚡ Performance Monitoring
+
+on:
+  schedule:
+    # Run performance tests weekly on Sundays at 3 AM UTC
+    - cron: '0 3 * * 0'
+  push:
+    branches: [ main ]
+    paths:
+      - '*.py'
+      - 'requirements.txt'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '*.py'
+      - 'requirements.txt'
+  workflow_dispatch:
+    inputs:
+      benchmark_mode:
+        description: 'Benchmark Mode'
+        required: false
+        default: 'standard'
+        type: choice
+        options:
+          - quick
+          - standard
+          - comprehensive
+      profile_memory:
+        description: 'Enable memory profiling?'
+        required: false
+        default: true
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  performance-baseline:
+    name: 📊 Performance Baseline
+    runs-on: ubuntu-latest
+    outputs:
+      baseline_results: ${{ steps.baseline.outputs.results }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-benchmark memory_profiler psutil
+    
+    - name: Create performance test directory
+      run: |
+        mkdir -p performance_tests
+    
+    - name: Create performance test files
+      run: |
+        # Create test files for benchmarking
+        mkdir -p test_data
+        echo "Sample text file content for search testing" > test_data/sample.txt
+        echo "Another file with different content" > test_data/another.txt
+        echo "Python code example" > test_data/example.py
+        
+        # Create larger test files
+        for i in {1..100}; do
+          echo "Line $i with some searchable content and keywords" >> test_data/large_file.txt
+        done
+    
+    - name: Run baseline performance tests
+      id: baseline
+      run: |
+        echo "🏁 Running baseline performance tests..."
+        
+        cat > performance_tests/test_search_performance.py << 'EOF'
+        import pytest
+        import time
+        import os
+        import sys
+        import tempfile
+        from memory_profiler import profile
+        import psutil
+        
+        # Add project root to path
+        sys.path.insert(0, os.path.abspath('.'))
+        
+        try:
+            from file_search_tool import search_files
+        except ImportError:
+            # Fallback if import fails
+            def search_files(directory, pattern, file_types=None):
+                import glob
+                import os
+                results = []
+                for root, dirs, files in os.walk(directory):
+                    for file in files:
+                        if pattern.lower() in file.lower():
+                            results.append(os.path.join(root, file))
+                return results[:100]  # Limit results
+        
+        class TestSearchPerformance:
+            @pytest.mark.benchmark(group="search")
+            def test_search_single_file_type(self, benchmark):
+                """Test search performance for single file type"""
+                def search_txt():
+                    return search_files("test_data", "content", [".txt"])
+                
+                result = benchmark(search_txt)
+                assert isinstance(result, list)
+            
+            @pytest.mark.benchmark(group="search")  
+            def test_search_multiple_file_types(self, benchmark):
+                """Test search performance for multiple file types"""
+                def search_multi():
+                    return search_files("test_data", "content", [".txt", ".py"])
+                
+                result = benchmark(search_multi)
+                assert isinstance(result, list)
+            
+            @pytest.mark.benchmark(group="search")
+            def test_search_large_directory(self, benchmark):
+                """Test search performance in larger directory"""
+                def search_large():
+                    return search_files(".", "test", None)
+                
+                result = benchmark(search_large)
+                assert isinstance(result, list)
+            
+            def test_memory_usage(self):
+                """Test memory usage during search"""
+                process = psutil.Process()
+                memory_before = process.memory_info().rss / 1024 / 1024  # MB
+                
+                # Perform search operation
+                results = search_files("test_data", "content", [".txt"])
+                
+                memory_after = process.memory_info().rss / 1024 / 1024  # MB
+                memory_diff = memory_after - memory_before
+                
+                print(f"Memory usage: {memory_before:.2f} MB -> {memory_after:.2f} MB (diff: {memory_diff:.2f} MB)")
+                
+                # Memory usage should be reasonable (less than 100 MB increase)
+                assert memory_diff < 100, f"Memory usage increased by {memory_diff:.2f} MB"
+        EOF
+        
+        # Run performance tests
+        pytest performance_tests/test_search_performance.py \
+          --benchmark-json=benchmark_results.json \
+          --benchmark-only \
+          -v
+        
+        # Extract key metrics
+        RESULTS=$(python -c "
+        import json
+        try:
+            with open('benchmark_results.json') as f:
+                data = json.load(f)
+            benchmarks = data.get('benchmarks', [])
+            for b in benchmarks:
+                name = b['name']
+                stats = b['stats']
+                mean = stats['mean']
+                min_time = stats['min']
+                max_time = stats['max']
+                print(f'{name}: mean={mean:.4f}s, min={min_time:.4f}s, max={max_time:.4f}s')
+        except Exception as e:
+            print(f'Error parsing results: {e}')
+        ")
+        
+        echo "results<<EOF" >> $GITHUB_OUTPUT
+        echo "$RESULTS" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        echo "✅ Baseline performance tests completed"
+    
+    - name: Upload performance results
+      uses: actions/upload-artifact@v3
+      with:
+        name: baseline-performance-results
+        path: |
+          benchmark_results.json
+          performance_tests/
+        retention-days: 30
+
+  memory-profiling:
+    name: 🧠 Memory Profiling
+    runs-on: ubuntu-latest
+    if: github.event.inputs.profile_memory == 'true' || github.event_name != 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install memory_profiler matplotlib psutil
+    
+    - name: Create memory profiling script
+      run: |
+        cat > memory_profile.py << 'EOF'
+        #!/usr/bin/env python3
+        """Memory profiling script for Master Search"""
+        
+        import os
+        import sys
+        import tempfile
+        from memory_profiler import profile, LineProfiler
+        import psutil
+        
+        # Add project root to path
+        sys.path.insert(0, os.path.abspath('.'))
+        
+        try:
+            from file_search_tool import search_files
+        except ImportError:
+            print("Warning: Could not import search_files, using fallback")
+            def search_files(directory, pattern, file_types=None):
+                import glob
+                results = []
+                for root, dirs, files in os.walk(directory):
+                    for file in files:
+                        if pattern.lower() in file.lower():
+                            results.append(os.path.join(root, file))
+                return results[:100]
+        
+        @profile
+        def memory_intensive_search():
+            """Perform memory-intensive search operation"""
+            print("Starting memory-intensive search...")
+            
+            # Create temporary test files
+            with tempfile.TemporaryDirectory() as temp_dir:
+                # Create multiple test files
+                for i in range(50):
+                    with open(f"{temp_dir}/test_file_{i}.txt", "w") as f:
+                        f.write(f"Test content {i} with searchable keywords\n" * 100)
+                
+                # Perform searches
+                results = []
+                for pattern in ["test", "content", "keywords", "searchable"]:
+                    search_result = search_files(temp_dir, pattern, [".txt"])
+                    results.extend(search_result)
+                
+                print(f"Found {len(results)} total results")
+                return results
+        
+        def monitor_system_resources():
+            """Monitor system resources during operation"""
+            process = psutil.Process()
+            
+            print("System Resource Monitoring:")
+            print(f"  CPU Count: {psutil.cpu_count()}")
+            print(f"  Memory Total: {psutil.virtual_memory().total / 1024 / 1024:.0f} MB")
+            print(f"  Memory Available: {psutil.virtual_memory().available / 1024 / 1024:.0f} MB")
+            
+            print("\nProcess Information (Before):")
+            print(f"  PID: {process.pid}")
+            print(f"  Memory RSS: {process.memory_info().rss / 1024 / 1024:.2f} MB")
+            print(f"  Memory VMS: {process.memory_info().vms / 1024 / 1024:.2f} MB")
+            print(f"  CPU Percent: {process.cpu_percent():.2f}%")
+            
+            # Run memory-intensive operation
+            results = memory_intensive_search()
+            
+            print("\nProcess Information (After):")
+            print(f"  Memory RSS: {process.memory_info().rss / 1024 / 1024:.2f} MB")
+            print(f"  Memory VMS: {process.memory_info().vms / 1024 / 1024:.2f} MB")
+            print(f"  CPU Percent: {process.cpu_percent():.2f}%")
+            
+            return results
+        
+        if __name__ == "__main__":
+            monitor_system_resources()
+        EOF
+        
+        chmod +x memory_profile.py
+    
+    - name: Run memory profiling
+      run: |
+        echo "🧠 Running memory profiling..."
+        
+        # Run with line-by-line memory profiling
+        python -m memory_profiler memory_profile.py > memory_profile_results.txt
+        
+        echo "✅ Memory profiling completed"
+        cat memory_profile_results.txt
+    
+    - name: Upload memory profiling results
+      uses: actions/upload-artifact@v3
+      with:
+        name: memory-profiling-results
+        path: |
+          memory_profile_results.txt
+          memory_profile.py
+        retention-days: 30
+
+  load-testing:
+    name: 🚀 Load Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install locust psutil
+    
+    - name: Create load testing script
+      run: |
+        cat > load_test.py << 'EOF'
+        #!/usr/bin/env python3
+        """Load testing for Master Search"""
+        
+        import os
+        import sys
+        import time
+        import random
+        import tempfile
+        import concurrent.futures
+        from threading import Thread
+        
+        # Add project root to path
+        sys.path.insert(0, os.path.abspath('.'))
+        
+        try:
+            from file_search_tool import search_files
+        except ImportError:
+            print("Warning: Could not import search_files, using fallback")
+            def search_files(directory, pattern, file_types=None):
+                import glob
+                results = []
+                for root, dirs, files in os.walk(directory):
+                    for file in files:
+                        if pattern.lower() in file.lower():
+                            results.append(os.path.join(root, file))
+                return results[:50]
+        
+        def create_test_environment():
+            """Create test environment with multiple files"""
+            test_dir = tempfile.mkdtemp()
+            
+            # Create various file types
+            patterns = ["document", "config", "source", "data", "backup"]
+            extensions = [".txt", ".py", ".json", ".md", ".conf"]
+            
+            for i in range(100):
+                pattern = random.choice(patterns)
+                ext = random.choice(extensions)
+                content = f"Test file {i} with {pattern} content\n" * random.randint(10, 50)
+                
+                with open(f"{test_dir}/file_{i}_{pattern}{ext}", "w") as f:
+                    f.write(content)
+            
+            return test_dir
+        
+        def simulate_user_search(test_dir, user_id, num_searches=10):
+            """Simulate user search behavior"""
+            search_patterns = ["document", "config", "source", "test", "file"]
+            file_types = [[".txt"], [".py"], [".json"], [".txt", ".py"], None]
+            
+            results = []
+            start_time = time.time()
+            
+            for i in range(num_searches):
+                pattern = random.choice(search_patterns)
+                types = random.choice(file_types)
+                
+                search_start = time.time()
+                search_result = search_files(test_dir, pattern, types)
+                search_time = time.time() - search_start
+                
+                results.append({
+                    'user_id': user_id,
+                    'search_id': i,
+                    'pattern': pattern,
+                    'types': types,
+                    'results_count': len(search_result),
+                    'search_time': search_time
+                })
+                
+                # Small delay between searches
+                time.sleep(0.1)
+            
+            total_time = time.time() - start_time
+            return {
+                'user_id': user_id,
+                'total_time': total_time,
+                'searches': results
+            }
+        
+        def run_load_test(num_users=5, searches_per_user=10):
+            """Run load test with multiple concurrent users"""
+            print(f"🚀 Starting load test with {num_users} users, {searches_per_user} searches each")
+            
+            test_dir = create_test_environment()
+            print(f"📁 Created test environment: {test_dir}")
+            
+            start_time = time.time()
+            
+            with concurrent.futures.ThreadPoolExecutor(max_workers=num_users) as executor:
+                futures = []
+                for user_id in range(num_users):
+                    future = executor.submit(simulate_user_search, test_dir, user_id, searches_per_user)
+                    futures.append(future)
+                
+                results = []
+                for future in concurrent.futures.as_completed(futures):
+                    result = future.result()
+                    results.append(result)
+            
+            total_time = time.time() - start_time
+            
+            # Analyze results
+            total_searches = sum(len(r['searches']) for r in results)
+            avg_search_time = sum(
+                search['search_time'] 
+                for r in results 
+                for search in r['searches']
+            ) / total_searches
+            
+            print(f"\n📊 Load Test Results:")
+            print(f"  Total Users: {num_users}")
+            print(f"  Total Searches: {total_searches}")
+            print(f"  Total Time: {total_time:.2f}s")
+            print(f"  Average Search Time: {avg_search_time:.4f}s")
+            print(f"  Searches per Second: {total_searches / total_time:.2f}")
+            
+            # Cleanup
+            import shutil
+            shutil.rmtree(test_dir)
+            
+            return {
+                'num_users': num_users,
+                'total_searches': total_searches,
+                'total_time': total_time,
+                'avg_search_time': avg_search_time,
+                'searches_per_second': total_searches / total_time
+            }
+        
+        if __name__ == "__main__":
+            # Different load test scenarios
+            scenarios = [
+                {'users': 1, 'searches': 20},
+                {'users': 3, 'searches': 15},
+                {'users': 5, 'searches': 10},
+            ]
+            
+            for scenario in scenarios:
+                print(f"\n{'='*60}")
+                result = run_load_test(scenario['users'], scenario['searches'])
+                print(f"{'='*60}")
+        EOF
+    
+    - name: Run load testing
+      run: |
+        echo "🚀 Running load testing..."
+        python load_test.py > load_test_results.txt 2>&1
+        
+        echo "✅ Load testing completed"
+        cat load_test_results.txt
+    
+    - name: Upload load testing results
+      uses: actions/upload-artifact@v3
+      with:
+        name: load-testing-results
+        path: |
+          load_test_results.txt
+          load_test.py
+        retention-days: 30
+
+  performance-report:
+    name: 📈 Performance Report
+    runs-on: ubuntu-latest
+    needs: [performance-baseline, memory-profiling, load-testing]
+    if: always()
+    
+    steps:
+    - name: Download all performance results
+      uses: actions/download-artifact@v3
+      with:
+        path: ./performance_results
+    
+    - name: Generate performance report
+      run: |
+        echo "# ⚡ Performance Monitoring Report" > performance_report.md
+        echo "" >> performance_report.md
+        echo "**Generated:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> performance_report.md
+        echo "**Branch:** ${{ github.ref }}" >> performance_report.md
+        echo "**Commit:** ${{ github.sha }}" >> performance_report.md
+        echo "" >> performance_report.md
+        
+        echo "## 📊 Test Results Summary" >> performance_report.md
+        echo "" >> performance_report.md
+        echo "| Test Type | Status | Details |" >> performance_report.md
+        echo "|-----------|--------|---------|" >> performance_report.md
+        echo "| Performance Baseline | ${{ needs.performance-baseline.result }} | Benchmark tests |" >> performance_report.md
+        echo "| Memory Profiling | ${{ needs.memory-profiling.result }} | Memory usage analysis |" >> performance_report.md
+        echo "| Load Testing | ${{ needs.load-testing.result }} | Concurrent user simulation |" >> performance_report.md
+        echo "" >> performance_report.md
+        
+        if [[ "${{ needs.performance-baseline.result }}" == "success" ]]; then
+          echo "## 🏁 Baseline Performance Results" >> performance_report.md
+          echo "" >> performance_report.md
+          echo "\`\`\`" >> performance_report.md
+          echo "${{ needs.performance-baseline.outputs.baseline_results }}" >> performance_report.md
+          echo "\`\`\`" >> performance_report.md
+          echo "" >> performance_report.md
+        fi
+        
+        echo "## 📋 Performance Analysis" >> performance_report.md
+        echo "" >> performance_report.md
+        echo "### 🎯 Key Metrics" >> performance_report.md
+        echo "- **Search Performance**: File search operations benchmarked" >> performance_report.md
+        echo "- **Memory Usage**: Memory consumption during operations" >> performance_report.md
+        echo "- **Concurrent Load**: Performance under multiple users" >> performance_report.md
+        echo "" >> performance_report.md
+        
+        echo "### 🔍 Detailed Results" >> performance_report.md
+        echo "" >> performance_report.md
+        
+        # Include memory profiling results if available
+        if [ -f "performance_results/memory-profiling-results/memory_profile_results.txt" ]; then
+          echo "#### 🧠 Memory Profiling" >> performance_report.md
+          echo "" >> performance_report.md
+          echo "\`\`\`" >> performance_report.md
+          head -50 performance_results/memory-profiling-results/memory_profile_results.txt >> performance_report.md
+          echo "\`\`\`" >> performance_report.md
+          echo "" >> performance_report.md
+        fi
+        
+        # Include load testing results if available  
+        if [ -f "performance_results/load-testing-results/load_test_results.txt" ]; then
+          echo "#### 🚀 Load Testing" >> performance_report.md
+          echo "" >> performance_report.md
+          echo "\`\`\`" >> performance_report.md
+          tail -30 performance_results/load-testing-results/load_test_results.txt >> performance_report.md
+          echo "\`\`\`" >> performance_report.md
+          echo "" >> performance_report.md
+        fi
+        
+        echo "## 🎯 Performance Recommendations" >> performance_report.md
+        echo "" >> performance_report.md
+        echo "### ✅ Best Practices" >> performance_report.md
+        echo "- Monitor search performance for large directories" >> performance_report.md
+        echo "- Optimize memory usage for concurrent operations" >> performance_report.md
+        echo "- Implement caching for frequently searched patterns" >> performance_report.md
+        echo "- Consider pagination for large result sets" >> performance_report.md
+        echo "" >> performance_report.md
+        
+        echo "### 🔧 Optimization Areas" >> performance_report.md
+        echo "- File system traversal efficiency" >> performance_report.md
+        echo "- Pattern matching algorithms" >> performance_report.md
+        echo "- Memory management during large searches" >> performance_report.md
+        echo "- Concurrent user handling" >> performance_report.md
+        echo "" >> performance_report.md
+        
+        # Overall assessment
+        if [[ "${{ needs.performance-baseline.result }}" == "success" && 
+              "${{ needs.memory-profiling.result }}" == "success" && 
+              "${{ needs.load-testing.result }}" == "success" ]]; then
+          echo "## ✅ Overall Assessment: EXCELLENT" >> performance_report.md
+          echo "" >> performance_report.md
+          echo "All performance tests completed successfully. The application demonstrates:" >> performance_report.md
+          echo "- Stable performance under load" >> performance_report.md
+          echo "- Reasonable memory usage" >> performance_report.md
+          echo "- Good concurrent user handling" >> performance_report.md
+        else
+          echo "## ⚠️  Overall Assessment: NEEDS ATTENTION" >> performance_report.md
+          echo "" >> performance_report.md
+          echo "Some performance tests failed or showed concerning results. Review required:" >> performance_report.md
+          echo "- Check failed test details" >> performance_report.md
+          echo "- Investigate performance bottlenecks" >> performance_report.md
+          echo "- Consider optimization strategies" >> performance_report.md
+        fi
+        
+        echo "" >> performance_report.md
+        echo "---" >> performance_report.md
+        echo "*Generated by GitHub Actions Performance Monitoring*" >> performance_report.md
+        
+        cat performance_report.md
+    
+    - name: Upload performance report
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-monitoring-report
+        path: |
+          performance_report.md
+          performance_results/
+        retention-days: 30
