@@ -1,361 +1,536 @@
+# 🔍 Master Search
+
 ![Master Search](https://raw.githubusercontent.com/Loony2392/master-search/main/media/master_search_icon_128x128.png)
 
-> Professional file search with extended features
+> Professional file search tool with advanced features and German localization
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![Python](https://img.shields.io/badge/python-3.7+-green.svg)
+![Version](https://img.shields.io/badge/version-2025.11.10-blue.svg)
+![Python](https://img.shields.io/badge/python-3.8+-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-orange.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)
 
 **Author:** [@Loony2392](https://github.com/Loony2392)  
-**Email:** info@loony-tech.de
-**Company:** LOONY-TECH
+**Email:** b.kolb@loony-tech.de  
+**Company:** LOONY-TECH  
 **GitHub:** https://github.com/Loony2392/master-search  
 **Created:** November 2025
 
 ---
 
-## Table of Contents
+## 🚀 Table of Contents
 
-- Features
-- Installation
-- Usage
-- Screenshots
-- Configuration
-- Supported file types
-- Technical details
-- Troubleshooting
-- Changelog
-- Author
-
----
-
-## Features
-
-- Filename search (case-insensitive)
-- Folder-name search
-- Content search inside text files
-- Recursive search
-- Fast parallel processing (threading / multiprocessing)
-- HTML report generation with clickable links
-
-UI & reporting:
-- Color console output (colorama)
-- Emoji support for readability
-- Real-time progress and stats
-- Responsive HTML results with highlights
-
-Performance & stability:
-- Intelligent worker scaling using CPU/RAM (optional `psutil`)
-- Batch processing and memory-friendly file handling
-- Encoding fallbacks for mixed-encoding repositories
+- [Features](#-features)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [Technical Architecture](#-technical-architecture)
+- [Configuration](#-configuration)
+- [Supported File Types](#-supported-file-types)
+- [Internationalization](#-internationalization)
+- [Troubleshooting](#-troubleshooting)
+- [Testing & Quality Assurance](#-testing--quality-assurance)
+- [Changelog](#-changelog)
+- [Author](#-author)
+- [License](#-license)
 
 ---
 
-## Installation
+## ✨ Features
 
-### Option 1 — MSI Installer (Windows, recommended)
+### Core Search Functionality
+- **🔍 Filename Search**: Case-insensitive filename and directory name matching
+- **📝 Content Search**: Full-text search inside files with line number tracking
+- **🔄 Recursive Search**: Deep directory traversal with intelligent filtering
+- **⚡ High Performance**: Multi-threaded processing with optimized algorithms
+- **📄 Professional Reports**: Beautiful HTML reports with clickable links and statistics
 
-1. Download the latest `master-search-x.x.x.msi` from the Releases page.
-2. Double-click the MSI and follow the installer.
-3. Launch from Start Menu → "Master Search" or run `master-search` from a terminal.
+### Modern User Interface
+- **🎨 Colorful Console Output**: Rich terminal interface with emoji support
+- **📊 Real-time Progress**: Live statistics and progress tracking
+- **🌍 Multilingual Support**: Complete German localization (138+ UI elements)
+- **🎯 Responsive Design**: HTML reports work perfectly on all devices
+- **✨ Modern Animations**: Smooth 60 FPS loading animations with HorizontalPulseLoader
 
-Pros: no Python required on target machine, clean Windows integration and an uninstaller.
+### Performance & Reliability
+- **🚀 Intelligent Scaling**: Automatic worker optimization based on CPU/RAM
+- **💾 Memory Efficient**: Smart batch processing for large file sets
+- **🔒 Encoding Robust**: Fallback support for UTF-8, Latin-1, CP1252, and more
+- **🛡️ Error Handling**: Graceful handling of permission errors and file corruption
+- **📦 Large Files**: Automatic skipping of files >50MB to maintain performance
 
-### Option 2 — Python (developer / advanced users)
+### Cross-Platform Support
+- **🏠 Windows**: Native MSI installer with Start Menu integration
+- **🍎 macOS**: Native app bundle with macOS-specific utilities
+- **🐧 Linux**: Source installation with all dependencies included
+- **⚙️ Universal**: Pure Python core works everywhere
 
-Requirements:
-- Python 3.7+
+---
 
-Clone and install:
+## 📦 Installation
 
+### Option 1: Windows MSI Installer (Recommended)
+
+1. Download the latest `Master_Search_v2025.11.10_Windows.msi` from [Releases](https://github.com/Loony2392/master-search/releases)
+2. Double-click the MSI and follow the installation wizard
+3. Launch from Start Menu → "Master Search" or run from terminal
+
+**Benefits:** No Python required, clean Windows integration, automatic uninstaller
+
+### Option 2: Python Source (All Platforms)
+
+**Requirements:**
+- Python 3.8 or higher
+- pip package manager
+
+**Installation:**
 ```bash
-git clone <repository-url>
+# Clone the repository
+git clone https://github.com/Loony2392/master-search.git
 cd master-search
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Run the application
+python gui_main.py
 ```
 
-Run locally:
+### Option 3: macOS Native Package
 
 ```bash
-python file_search_tool.py
+# Download and extract
+curl -L https://github.com/Loony2392/master-search/releases/latest/download/Master_Search_v2025.11.10_macOS.zip -o master-search.zip
+unzip master-search.zip
+cd master-search
+python gui_main.py
 ```
 
-### Option 3 — Build MSI yourself
+### Option 4: Build from Source
 
-Install dev dependencies and run the build script:
+For developers who want to build custom versions:
 
 ```bash
+# Install build dependencies
 pip install -r requirements-dev.txt
-python build_msi.py
-```
 
-The resulting MSI will be in `dist/`.
+# Build Windows MSI (Windows only)
+python build_msi.py
+
+# Build documentation
+python -m build --sdist
+```
 
 ---
 
-## Usage
+## 🎯 Usage
 
-Start the GUI (`gui_search_tool.py`) or the CLI (`file_search_tool.py`).
-
-Basic CLI example:
+### Graphical Interface (Recommended)
 
 ```bash
+# Start the modern GUI
+python gui_main.py
+```
+
+1. **Enter search terms**: Type one or more search patterns (comma/semicolon separated)
+2. **Select directory**: Browse or type the path to search
+3. **Choose file types**: Select specific extensions or search all files
+4. **Configure options**: Set case sensitivity, content search, etc.
+5. **Start search**: Click "Search" and watch real-time progress
+6. **View results**: HTML report opens automatically with detailed findings
+
+### Command Line Interface
+
+```bash
+# Start CLI mode
 python file_search_tool.py
+
+# Example usage
+python file_search_tool.py --search "config,settings" --path "/home/user/projects" --types ".json,.ini,.conf"
 ```
 
-Enter one or more search terms (comma/semicolon/newline separated) and a path to scan.
+### Batch Processing
 
-After completion an HTML report is generated and opened automatically when possible.
-
----
-
-## Internationalization (i18n)
-
-The GUI uses a simple i18n module (`i18n.py`) and `locales/` JSON files. By default the app uses the system locale and falls back to English. Add or edit `locales/<lang>.json` to provide translations.
-
-Master Search — English README
-==============================
-
-Quick start
------------
-1. Install requirements:
 ```bash
-pip install -r requirements.txt
+# Search multiple patterns across different directories
+python cli_main.py --batch --config search_config.json
 ```
-
-Internationalization (i18n)
---------------------------
-This project uses a gettext-based approach for localization. A small bootstrap module is provided: [Master Search/i18n.py](Master Search/i18n.py). Usage in your start scripts:
-
-```py
-from i18n import setup_i18n
-_ = setup_i18n(domain="master_search", localedir="locales")
-# use _("Some string") throughout your code
-```
-
-By default, English strings should be used in the source. Translations live under the `locales/` folder (standard gettext structure). You can extract messages with common tools (xgettext / msgfmt / babel) and provide `.po`/.mo files there.
-
-GUI and CLI
------------
-Keep the GUI strings wrapped with `_()` to allow runtime translation depending on the system locale. The GUI will load translations based on the system language at startup.
-
-MSI / Packaging (Windows)
--------------------------
-We provide a helper script to build the EXE and MSI on Windows:
-- [Master Search/setup_msi.py](Master Search/setup_msi.py)
-- [Master Search/build_msi.py](Master Search/build_msi.py)
-
-Build steps (Windows):
-```powershell
-# inside the project root
-pip install -r requirements-dev.txt
-python build_msi.py
-```
-
-Notes
------
-- Source strings and README are in English by default.
-- Translation files should be placed in `locales/<lang>/LC_MESSAGES/master_search.mo`.
-- See [Master Search/setup.py](Master Search/setup.py) for packaging configuration.
 
 ---
 
-## Troubleshooting
+## 🛠️ Technical Architecture
 
-- ModuleNotFoundError: colorama — install via `pip install -r requirements-minimal.txt` or `pip install colorama`.
-- PermissionError — run as Administrator or check file permissions.
-- MSI issues — ensure Visual Studio Build Tools are available when building on Windows.
+### System Overview
+
+```
+Master Search Architecture
+├── 🎨 User Interface Layer
+│   ├── GUI (gui_main.py, gui_search_tool.py)
+│   ├── CLI (cli_main.py, file_search_tool.py)
+│   └── Animations (loading_animations.py)
+├── 🔍 Core Search Engine
+│   ├── File System Scanner
+│   ├── Content Analyzer
+│   ├── Pattern Matcher
+│   └── Result Aggregator
+├── 🌍 Internationalization
+│   ├── Translation System (i18n.py)
+│   ├── Language Configuration (language_config.py)
+│   └── Locale Files (locales/*.json)
+├── 📊 Reporting System
+│   ├── HTML Template Engine
+│   ├── Statistics Calculator
+│   ├── Export Utilities
+│   └── Report Generator (report_generator.py)
+└── ⚙️ System Integration
+    ├── Performance Configuration
+    ├── Settings Management
+    ├── Cross-Platform Utilities
+    └── Build Scripts
+```
+
+### Search Algorithm
+
+1. **Directory Traversal**: Recursive scanning with `os.walk()` optimization
+2. **File Filtering**: Extension-based filtering with configurable patterns
+3. **Content Analysis**: 
+   - Intelligent encoding detection (UTF-8, Latin-1, CP1252)
+   - Line-by-line processing for memory efficiency
+   - Pattern matching with case-insensitive options
+   - Line number tracking for precise result reporting
+4. **Result Aggregation**: Structured data collection with metadata
+5. **Report Generation**: Template-based HTML report creation
+
+### Performance Optimizations
+
+- **Lazy Loading**: Files are read only when necessary
+- **Encoding Fallbacks**: Multiple encoding attempts for compatibility
+- **Size Limits**: Large files (>50MB) are automatically skipped
+- **Batch Processing**: Efficient processing in configurable chunks
+- **Memory Management**: No full file loading into memory
+- **Thread Pool**: Optimized worker threads based on system resources
 
 ---
 
-## Author
+## ⚙️ Configuration
 
-Loony2392 — LOONY-TECH
+### Performance Settings
 
-Contact: info@loony-tech.de
+Edit `performance_config.py`:
 
-- **Große Dateien** (>50MB) werden automatisch übersprungen
+```python
+PERFORMANCE_CONFIG = {
+    'MAX_FILE_SIZE_MB': 50,           # Skip files larger than 50MB
+    'BATCH_SIZE': 1000,               # Process files in batches
+    'MAX_WORKERS': None,              # Auto-detect based on CPU cores
+    'MEMORY_LIMIT_MB': 1024,          # Memory usage limit
+    'TIMEOUT_SECONDS': 300            # Search timeout
+}
+```
+
+### Language Settings
+
+Edit `language_config.py`:
+
+```python
+LANGUAGE_CONFIG = {
+    'default_language': 'en',         # Default to English
+    'fallback_language': 'en',        # Fallback language
+    'auto_detect': True,              # Auto-detect system language
+    'available_languages': ['en', 'de', 'fr']
+}
+```
+
+### Application Settings
+
+Edit `settings_manager.py` for advanced configuration:
+
+```python
+SETTINGS = {
+    'search': {
+        'case_sensitive': False,
+        'include_hidden_files': False,
+        'max_results': 10000
+    },
+    'ui': {
+        'theme': 'modern',
+        'animations_enabled': True,
+        'auto_open_reports': True
+    }
+}
+```
 
 ---
 
-## 🛠️ Technische Details
+## 📁 Supported File Types
 
-### 🏗️ **Architektur**
+Master Search intelligently handles various file types:
 
+### Text Files (Content Search)
+- **Documents**: `.txt`, `.md`, `.rst`, `.doc`, `.docx`
+- **Source Code**: `.py`, `.js`, `.html`, `.css`, `.java`, `.cpp`, `.c`, `.h`
+- **Configuration**: `.json`, `.xml`, `.yml`, `.yaml`, `.ini`, `.conf`, `.cfg`
+- **Data Files**: `.csv`, `.tsv`, `.log`, `.sql`
+- **Web Files**: `.php`, `.asp`, `.jsp`, `.tsx`, `.jsx`
+
+### Binary Files (Filename Search Only)
+- **Images**: `.jpg`, `.png`, `.gif`, `.bmp`, `.svg`, `.ico`
+- **Archives**: `.zip`, `.rar`, `.7z`, `.tar`, `.gz`, `.bz2`
+- **Executables**: `.exe`, `.msi`, `.deb`, `.rpm`, `.dmg`
+- **Media**: `.mp3`, `.mp4`, `.avi`, `.mkv`, `.wav`
+
+### Custom File Type Configuration
+
+Create a custom file type filter:
+
+```python
+CUSTOM_FILE_TYPES = {
+    'source_code': ['.py', '.js', '.java', '.cpp'],
+    'documents': ['.txt', '.md', '.doc', '.pdf'],
+    'config_files': ['.json', '.xml', '.yml', '.ini']
+}
 ```
-Master Search
-├── 🔍 FileSearchTool (Hauptklasse)
-│   ├── 🎨 Farb-System (colorama)
-│   ├── 📊 Fortschritts-Tracking
-│   ├── 🔍 Such-Engine
-│   └── 📄 HTML-Generator
-├── 🎯 Such-Algorithmen
-│   ├── Dateiname-Suche
-│   ├── Ordnername-Suche
-│   └── Inhalt-Suche
-└── 📋 Bericht-Generator
-    ├── HTML-Template
-    ├── CSS-Styling
-    └── JavaScript-Funktionen
+
+---
+
+## 🌍 Internationalization
+
+Master Search features complete internationalization with professional translations.
+
+### Supported Languages
+
+- **🇺🇸 English (en)**: Default language, 138+ strings
+- **🇩🇪 German (de)**: Complete localization, 138+ strings
+- **🇫🇷 French (fr)**: Basic localization, 100+ strings
+
+### Translation System
+
+The i18n system uses JSON-based translations:
+
+```python
+# Usage in code
+from i18n import _
+print(_("search_started"))  # Auto-translates based on system locale
 ```
 
-### 🔍 **Such-Algorithmus**
+### Adding New Languages
 
-1. **Verzeichnis-Traversierung**: Rekursive Durchsuchung mit `os.walk()`
-2. **Dateiname-Matching**: Case-insensitive String-Vergleich
-3. **Content-Analyse**: 
-   - Intelligente Encoding-Erkennung (UTF-8, Latin-1, CP1252)
-   - Zeilen-für-Zeilen-Verarbeitung
-   - Treffer-Sammlung mit Zeilennummern
-4. **Ergebnis-Aggregation**: Strukturierte Datensammlung
-5. **HTML-Export**: Template-basierte Berichtgenerierung
+1. Create `locales/{language_code}.json`
+2. Copy structure from `locales/en.json`
+3. Translate all strings
+4. Test with `python test_realtime_display.py`
 
-### 📊 **Performance-Optimierungen**
+Example translation file structure:
 
-- **Lazy Loading**: Dateien werden nur bei Bedarf gelesen
-- **Encoding-Fallbacks**: Mehrere Encoding-Versuche für Kompatibilität
-- **Größen-Limits**: Große Dateien werden übersprungen
-- **Batch-Processing**: Effiziente Verarbeitung in Stapeln
-- **Memory Management**: Keine vollständige Datei-Ladung in den Speicher
+```json
+{
+    "app_title": "Master Search",
+    "search_button": "Search",
+    "results_found": "{count} results found",
+    "language_name": "English"
+}
+```
+
+### Current Translation Coverage
+
+| Language | Coverage | Status |
+|----------|----------|---------|
+| English  | 138/138  | ✅ Complete |
+| German   | 138/138  | ✅ Complete |
+| French   | 100/138  | 🔄 In Progress |
 
 ---
 
 ## 🔧 Troubleshooting
 
-### ❓ **Häufige Probleme**
+### Common Issues
 
 #### 🐍 **ModuleNotFoundError: colorama**
 ```bash
-# Lösung 1 - Über requirements:
+# Solution 1 - Install via requirements
 pip install -r requirements-minimal.txt
 
-# Lösung 2 - Direkt:
+# Solution 2 - Direct installation
 pip install colorama
 
-# Lösung 3 - Automatisch:
-# Das Tool installiert colorama automatisch beim ersten Start
+# Solution 3 - Automatic installation
+# The tool auto-installs colorama on first run
 ```
 
-#### 🔒 **PermissionError beim Dateizugriff**
+#### 🔒 **PermissionError: File Access Denied**
 ```
-Fehler: [Errno 13] Permission denied: 'datei.txt'
+Error: [Errno 13] Permission denied: 'file.txt'
 ```
-**Lösung:** Script als Administrator ausführen oder Dateiberechtigungen prüfen
+**Solutions:**
+- Run as Administrator (Windows) or with sudo (Linux/macOS)
+- Check file permissions: `chmod 644 file.txt`
+- Verify antivirus software isn't blocking access
 
-#### 🌐 **HTML-Datei öffnet sich nicht automatisch**
+#### 🌐 **HTML Report Won't Open Automatically**
 ```
-Browser konnte nicht automatisch geöffnet werden
+Could not automatically open browser
 ```
-**Lösung:** HTML-Datei manuell im Browser öffnen (Pfad wird angezeigt)
+**Solutions:**
+- Manually open the HTML file (path is displayed in console)
+- Check default browser settings
+- Try different browser: `firefox report.html`
 
-#### 📦 **MSI-Installation Probleme**
+#### 📦 **MSI Installation Issues**
 
-**Problem:** "Diese App kann auf Ihrem PC nicht ausgeführt werden"
+**Problem:** "This app can't run on your PC"
 ```
-Lösung 1: MSI als Administrator ausführen
-Lösung 2: Windows SmartScreen temporär deaktivieren
-Lösung 3: Digital signierte Version anfordern
-```
-
-**Problem:** "Windows protected your PC" / SmartScreen-Warnung
-```
-Lösung: "More info" → "Run anyway" klicken
-Hinweis: Dies ist normal bei nicht-signierten Anwendungen
+Solution 1: Run MSI as Administrator
+Solution 2: Temporarily disable Windows SmartScreen
+Solution 3: Request digitally signed version
 ```
 
-**Problem:** MSI-Build schlägt fehl
+**Problem:** "Windows protected your PC" SmartScreen warning
+```
+Solution: Click "More info" → "Run anyway"
+Note: This is normal for unsigned applications
+```
+
+**Problem:** MSI build fails
 ```bash
-# Abhängigkeiten prüfen:
+# Check dependencies
 pip install cx_Freeze>=6.15.0
 
-# Windows Build Tools installieren:
-# Visual Studio Build Tools erforderlich
+# Install Windows Build Tools
+# Visual Studio Build Tools required
 
-# Versuchen Sie:
+# Try updated build
 python -m pip install --upgrade setuptools wheel
 python build_msi.py
 ```
 
-#### ⚡ **Performance-Probleme**
+#### ⚡ **Performance Issues**
 
-**Problem:** Sehr langsame Suche
+**Problem:** Very slow search
 ```
-Lösung 1: Verzeichnis mit weniger Dateien testen
-Lösung 2: psutil installieren für optimierte Worker-Anzahl
-Lösung 3: SSD statt HDD verwenden
-```
-
-**Problem:** Hoher RAM-Verbrauch  
-```
-Lösung 1: Kleinere Batch-Größen in performance_config.py
-Lösung 2: Weniger Worker-Threads konfigurieren
-Lösung 3: Antivirus-Software temporär deaktivieren
+Solution 1: Test with smaller directories first
+Solution 2: Install psutil for optimized worker count
+Solution 3: Use SSD instead of HDD for better I/O
+Solution 4: Exclude large binary files
 ```
 
-#### 🔍 **Keine Treffer gefunden**
+**Problem:** High memory usage
 ```
-🚫 Keine Ergebnisse gefunden
+Solution 1: Reduce batch size in performance_config.py
+Solution 2: Configure fewer worker threads
+Solution 3: Temporarily disable antivirus real-time scanning
+Solution 4: Close other memory-intensive applications
 ```
-**Mögliche Ursachen:**
-- Suchwort ist nicht vorhanden
-- Pfad enthält nur Binärdateien
-- Encoding-Probleme bei Textdateien
 
-#### ⚡ **Langsame Performance**
-**Optimierungen:**
-- Kleinere Verzeichnisse wählen
-- Große Dateien ausschließen
-- SSD verwenden für bessere I/O-Performance
+#### 🔍 **No Results Found**
+```
+🚫 No results found
+```
+**Possible causes:**
+- Search term doesn't exist in files
+- Directory contains only binary files
+- Encoding issues with text files
+- Search path is incorrect
+- File permissions prevent access
 
-### 🛠️ **Debug-Modus**
+### Debug Mode
 
-Für erweiterte Fehlerdiagnose können Sie Debug-Informationen aktivieren:
+Enable detailed logging for advanced troubleshooting:
 
 ```python
-# Am Anfang der main() Funktion hinzufügen:
+# Add to beginning of main() function
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 ```
+
+Or use environment variable:
+```bash
+# Windows
+set DEBUG=1 && python gui_main.py
+
+# Linux/macOS
+DEBUG=1 python gui_main.py
+```
+
+---
+
+## 🧪 Testing & Quality Assurance
+
+Master Search includes comprehensive testing and quality assurance:
+
+### Local Testing
+
+```bash
+# Simple test runner
+python test_all.py
+
+# Detailed unit tests
+pytest tests/test_file_search_tool.py -v
+
+# Integration tests
+pytest tests/test_integration.py -v
+
+# All tests with coverage report
+pytest tests/ -v --cov=file_search_tool --cov-report=html
+```
+
+### Test Coverage
+
+- ✅ **28 Unit Tests** - FileSearchTool functionality
+- ✅ **35+ Integration Tests** - Module interactions
+- ✅ **Syntax Checking** - py_compile validation
+- ✅ **Linting** - Flake8, Pylint analysis
+- ✅ **Security Scan** - Bandit security checks
+- ✅ **Functional Tests** - End-to-end validation
+
+### GitHub Actions Workflows
+
+Automated testing on every push and pull request:
+
+- 🔍 **test.yml** - Quality assurance pipeline with multi-platform testing
+- 🚀 **release.yml** - Automated build and release on git tags
+- 🔒 **security.yml** - Daily security audits and vulnerability scanning
+- ⚡ **performance.yml** - Weekly performance monitoring and benchmarks
+
+See [.github/workflows/README.md](.github/workflows/README.md) for detailed workflow documentation.
 
 ---
 
 ## 📝 Changelog
 
-### 🎉 **Version 1.0.0** (November 2025)
-- **🎉 Erstveröffentlichung** von Master Search
-- **🔍 Kern-Suchfunktionalität** implementiert
-- **🎨 Farbige Konsolen-UI** mit Emoji-Support
-- **📄 HTML-Berichterstattung** mit responsive Design
-- **📊 Fortschritts-Tracking** und Echtzeit-Statistiken
-- **🛠️ Cross-Platform-Unterstützung** (Windows, Linux, macOS)
-- **⚡ Performance-Optimierungen** für große Verzeichnisse
-- **🔧 Fehlerbehandlung** und graceful fallbacks
+### 🎉 **Version 2025.11.10** (November 2025)
+- **🌍 Complete German Localization**: 138+ UI elements fully translated
+- **✨ Modern Animation System**: HorizontalPulseLoader with 60 FPS canvas rendering
+- **🍎 macOS Compatibility**: Native support for macOS with platform-specific utilities
+- **⚡ Performance Improvements**: Optimized search algorithms and memory management
+- **🔒 Enhanced Security**: Comprehensive security scanning and vulnerability checks
+- **🚀 Professional CI/CD**: Advanced GitHub Actions workflows with quality gates
+- **📚 Improved Documentation**: Bilingual documentation (German/English)
 
-### 🔮 **Geplante Features** (Version 1.1.0)
-- **🔍 Regex-Suche** für erweiterte Muster
-- **📁 Ausschluss-Filter** für Dateien und Ordner
-- **💾 Konfigurationsdateien** für wiederverwendbare Einstellungen
-- **🔄 Batch-Modus** für automatisierte Suchen
-- **📧 Email-Berichte** für geplante Suchen
-- **🌐 Web-Interface** für Remote-Zugriff
+### 🔮 **Planned Features** (Version 2025.12.0)
+- **🔍 Regex Search**: Advanced pattern matching with regular expressions
+- **📁 Exclusion Filters**: Configurable file and directory exclusions
+- **💾 Configuration Profiles**: Reusable search configurations
+- **🔄 Batch Mode**: Automated scheduled searches
+- **📧 Email Reports**: Scheduled report delivery
+- **🌐 Web Interface**: Browser-based remote access
 
 ---
 
-## 👨‍💻 Autor
+## 👨‍💻 Author
 
 **Loony2392 ([@Loony2392](https://github.com/Loony2392))**
-- 📧 **Email:** info@loony-tech.de
-- 🏢 **Unternehmen:** LOONY-TECH
-- 🌍 **Standort:** Deutschland
-- 💼 **Position:** Software Developer & IT Specialist
+- 📧 **Email:** b.kolb@loony-tech.de
+- 🏢 **Company:** LOONY-TECH
+- 🌍 **Location:** Germany
+- 💼 **Role:** Software Developer & IT Specialist
 - 🐙 **GitHub:** [@Loony2392](https://github.com/Loony2392)
 
-### 🚀 **Über den Autor**
-Loony2392 ([@Loony2392](https://github.com/Loony2392)) ist ein erfahrener Software-Entwickler bei der LOONY-TECH mit Spezialisierung auf Python-Anwendungen und Automatisierungslösungen. Mit langjähriger Erfahrung in der Entwicklung von Tools für Dateiverwaltung und -analyse bringt er praktische Lösungen für alltägliche IT-Herausforderungen.
+### 🚀 **About the Author**
+Loony2392 is an experienced software developer at LOONY-TECH, specializing in Python applications and automation solutions. With extensive experience in developing tools for file management and data analysis, he creates practical solutions for everyday IT challenges.
 
-### 🎯 **Motivation**
-Master Search wurde bei LOONY-TECH entwickelt, um IT-Professionals und Entwicklern ein mächtiges, benutzerfreundliches Tool für die Dateisuche zur Verfügung zu stellen. Das Tool kombiniert Enterprise-Funktionalität mit einer ansprechenden Benutzeroberfläche und professioneller Berichterstattung.
+### 🎯 **Project Motivation**
+Master Search was developed at LOONY-TECH to provide IT professionals and developers with a powerful, user-friendly file search tool. The project combines enterprise functionality with an appealing user interface and professional reporting capabilities.
 
 ---
 
@@ -387,70 +562,41 @@ SOFTWARE.
 
 ---
 
-## 🙏 Danksagungen
+## 🙏 Acknowledgments
 
-- **Python Community** für die excellente Sprache und Bibliotheken
-- **colorama** Entwickler für die Cross-Platform-Farbunterstützung
-- **LOONY-TECH** für die Unterstützung bei der Entwicklung
-- **Open Source Community** für Inspiration und Best Practices
-
----
-
-## 🧪 Testing & Quality Assurance
-
-Master Search wird mit umfassenden Tests und Qualitätsprüfungen ausgeliefert:
-
-### Lokale Tests ausführen
-
-```bash
-# Einfacher Test-Runner
-python test_all.py
-
-# Unit Tests detailliert
-pytest tests/test_file_search_tool.py -v
-
-# Integration Tests
-pytest tests/test_integration.py -v
-
-# Alle Tests mit Coverage Report
-pytest tests/ -v --cov=file_search_tool --cov-report=html
-```
-
-### Test-Coverage
-
-- ✅ **28 Unit Tests** - FileSearchTool Funktionalität
-- ✅ **35+ Integration Tests** - Modul-Zusammenspiel
-- ✅ **Syntax Checking** - py_compile Validierung
-- ✅ **Linting** - Flake8, Pylint Analyse
-- ✅ **Security Scan** - Bandit Security Check
-- ✅ **Functional Tests** - End-to-End Validierung
-
-### GitHub Actions Workflows
-
-Automatische Tests bei jedem Push und Pull Request:
-
-- 🔍 **test.yml** - Syntax, Linting, Unit Tests, Integration Tests, Security, Build
-- 🚀 **release.yml** - Automatischer Build und Release bei git tag
-
-Siehe [TESTING.md](TESTING.md) und [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) für Details.
+- **Python Community** for the excellent language and libraries
+- **colorama developers** for cross-platform color support
+- **LOONY-TECH** for development support and resources
+- **Open Source Community** for inspiration and best practices
+- **Contributors** for testing, feedback, and improvements
 
 ---
 
-## 📞 Support & Kontakt
+## 📞 Support & Contact
 
-Haben Sie Fragen, Verbesserungsvorschläge oder benötigen Support?
+Questions, suggestions, or need support?
 
-- 📧 **Email:** info@loony-tech.de
-- 🐛 **Bug Reports:** Erstellen Sie ein Issue im Repository
-- 💡 **Feature Requests:** Senden Sie Ihre Ideen per Email
-- 📖 **Dokumentation:** Diese README.md wird regelmäßig aktualisiert
+- 📧 **Email:** b.kolb@loony-tech.de
+- 🐛 **Bug Reports:** [Create an issue](https://github.com/Loony2392/master-search/issues)
+- 💡 **Feature Requests:** [Start a discussion](https://github.com/Loony2392/master-search/discussions)
+- 📖 **Documentation:** This README is regularly updated
+- 🌐 **Website:** [GitHub Pages](https://loony2392.github.io/master-search/)
 
 ---
 
 <div align="center">
 
-**⭐ Wenn Ihnen Master Search gefällt, geben Sie uns einen Star! ⭐**
+**⭐ If you like Master Search, give us a star! ⭐**
 
-*Entwickelt mit ❤️ von Loony2392*
+*Developed with ❤️ by Loony2392*
+
+![GitHub Repo Stars](https://img.shields.io/github/stars/Loony2392/master-search?style=social)
+![GitHub Forks](https://img.shields.io/github/forks/Loony2392/master-search?style=social)
+![GitHub Watchers](https://img.shields.io/github/watchers/Loony2392/master-search?style=social)
+
+[📦 Download Latest Release](https://github.com/Loony2392/master-search/releases/latest) | 
+[📖 View Documentation](https://loony2392.github.io/master-search/) | 
+[🐛 Report Issues](https://github.com/Loony2392/master-search/issues) | 
+[💬 Join Discussions](https://github.com/Loony2392/master-search/discussions)
 
 </div>
