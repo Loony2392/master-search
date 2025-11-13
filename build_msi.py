@@ -28,7 +28,8 @@ class MSIBuilder:
     def __init__(self):
         self.project_root = Path(__file__).parent
         self.scripts_dir = self.project_root / 'scripts'
-        self.dist_folder = self.project_root / 'dist'
+        # Output to releases/windows/ instead of dist/
+        self.dist_folder = self.project_root / 'releases' / 'windows'
         self.build_folder = self.project_root / 'build'
         self.app_name = "Master Search"
         

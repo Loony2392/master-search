@@ -19,7 +19,7 @@ class PyInstallerBuilder:
     def __init__(self):
         self.project_root = Path(__file__).parent.parent  # Parent of scripts folder
         self.scripts_dir = self.project_root / 'scripts'
-        self.dist_folder = self.project_root / 'dist'
+        self.dist_folder = self.project_root / 'releases' / 'windows'
         self.build_folder = self.project_root / 'build'
         
     def print_status(self, message, prefix='[*]'):
@@ -29,7 +29,7 @@ class PyInstallerBuilder:
     def clean_build(self):
         """Clean previous builds."""
         self.print_status("Cleaning previous builds...", "[*]")
-        for folder in [self.build_folder, self.dist_folder, self.project_root / '__pycache__']:
+        for folder in [self.build_folder]:
             if folder.exists():
                 shutil.rmtree(folder, ignore_errors=True)
                 self.print_status(f"Removed {folder.name}", "[OK]")
@@ -84,6 +84,9 @@ class PyInstallerBuilder:
     
     def show_results(self):
         """Display build results."""
+        # Create releases folder if it doesn't exist
+        self.dist_folder.parent.mkdir(parents=True, exist_ok=True)
+        
         print("\n" + "="*60)
         self.print_status("BUILD COMPLETED SUCCESSFULLY", "[SUCCESS]")
         print("="*60 + "\n")

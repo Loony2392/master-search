@@ -28,9 +28,12 @@ class DMGBuilder:
     """DMG Builder for macOS App Bundle creation and distribution."""
     
     def __init__(self):
-        self.project_root = Path(__file__).parent.parent
+        # project_root should be the repository root (where `src/` and `config/` live)
+        # build_dmg.py sits in the repo root, so use parent (no extra ..)
+        self.project_root = Path(__file__).parent
         self.scripts_dir = Path(__file__).parent
-        self.dist_folder = self.project_root / 'dist'
+        # Output to releases/macos/ instead of dist/
+        self.dist_folder = self.project_root / 'releases' / 'macos'
         self.build_folder = self.project_root / 'build'
         self.app_name = "Master Search"
         self.bundle_identifier = "tech.loony.mastersearch"
@@ -171,13 +174,17 @@ DATA_FILES = [
 ]
 
 OPTIONS = {{
-    'argv_emulation': True,
+    # Avoid argv_emulation to prevent py2app from loading legacy Carbon APIs
+    # (which can fail on modern macOS/Cryptex setups). Use False so the
+    # bundled app doesn't attempt to load Carbon.framework at runtime.
+    'argv_emulation': False,
     'packages': ['tkinter', 'pathlib', 'json', 'datetime', 'threading', 
                 'concurrent', 'queue', 'multiprocessing'],
     'includes': ['gui_search_tool', 'platform_utils', 'file_search_tool', 'report_generator',
                 'settings_manager', 'update_notifier', 'i18n', 'version',
                 'language_config', 'performance_config', 'loading_animations'],
-    'excludes': ['PyQt4', 'PyQt5', 'matplotlib', 'numpy', 'scipy'],
+    # Exclude heavy or build-time-only packages to avoid duplicate metadata files
+    'excludes': ['PyQt4', 'PyQt5', 'matplotlib', 'numpy', 'scipy', 'wheel', 'setuptools', 'pkg_resources'],
     'resources': ['locales/', 'media/'],
     'plist': {{
         'CFBundleName': '{self.app_name}',
@@ -265,6 +272,10 @@ setup(
             app_path = self.dist_folder / f"{self.app_name}.app"
             if app_path.exists():
                 print(f"✅ App Bundle found at: {app_path}")
+                
+                # Fix: Manually copy _tkinter module that py2app sometimes misses
+                self._fix_tkinter_in_app(app_path)
+                
                 return app_path
             else:
                 print(f"❌ App Bundle not found at expected location: {app_path}")
@@ -273,6 +284,46 @@ setup(
         except Exception as e:
             print(f"❌ Error building app bundle: {e}")
             return False
+    
+    def _fix_tkinter_in_app(self, app_path):
+        """Fix missing _tkinter module by copying from system Python."""
+        print("\n🔧 Checking and fixing tkinter module...")
+        
+        try:
+            import tkinter
+            import sysconfig
+            
+            # Find system tkinter library directory
+            tkinter_path = Path(tkinter.__file__).parent
+            
+            # Destination in app bundle
+            resources_lib = app_path / 'Contents' / 'Resources' / 'lib' / f'python{sys.version_info.major}.{sys.version_info.minor}'
+            resources_lib.mkdir(parents=True, exist_ok=True)
+            
+            # Copy entire tkinter package
+            dest_tkinter = resources_lib / 'tkinter'
+            if dest_tkinter.exists():
+                print(f"   ✅ tkinter already in app bundle")
+            else:
+                print(f"   📦 Copying tkinter package from {tkinter_path}...")
+                shutil.copytree(tkinter_path, dest_tkinter, dirs_exist_ok=True)
+                print(f"   ✅ tkinter package copied")
+            
+            # Also try to find and copy _tkinter.so directly
+            for search_dir in [Path(sys.executable).parent.parent / 'lib', Path(sysconfig.get_config_var('LIBDIR'))]:
+                if search_dir and search_dir.exists():
+                    for tkinter_so in search_dir.glob('**/[_]tkinter*.so'):
+                        dest = resources_lib / tkinter_so.name
+                        if not dest.exists():
+                            print(f"   📦 Copying {tkinter_so.name}...")
+                            shutil.copy2(tkinter_so, dest)
+                        break
+            
+            print(f"   ✅ tkinter fix completed")
+            
+        except Exception as e:
+            print(f"   ⚠️  Warning: Could not fully fix tkinter: {e}")
+            print(f"   (App may still work, but GUI features may be limited)")
     
     def create_dmg_structure(self, app_path):
         """Create DMG directory structure."""
@@ -400,10 +451,18 @@ Version: {self.version}
             '-o', str(dmg_path)
         ]
         
-        convert_result = subprocess.run(convert_cmd, capture_output=True, text=True)
-        
-        if convert_result.returncode != 0:
-            print(f"❌ DMG compression failed: {convert_result.stderr}")
+        # Try conversion with a small retry loop to handle transient resource errors
+        max_attempts = 3
+        for attempt in range(1, max_attempts + 1):
+            convert_result = subprocess.run(convert_cmd, capture_output=True, text=True)
+            if convert_result.returncode == 0:
+                break
+            print(f"   ⚠️  DMG conversion attempt {attempt} failed: {convert_result.stderr.strip()}")
+            if attempt < max_attempts:
+                print("   Retrying in 2s...")
+                time.sleep(2)
+        else:
+            print(f"❌ DMG compression failed after {max_attempts} attempts: {convert_result.stderr}")
             return False
         
         # Clean up temporary DMG
