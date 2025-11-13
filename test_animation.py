@@ -94,8 +94,8 @@ class AnimationTester:
         color_frame = ttk.Frame(params_frame)
         color_frame.pack(fill="x", pady=5)
         ttk.Label(color_frame, text="Color:").pack(side="left", padx=5)
-        self.color_var = tk.StringVar(value="#00A8FF")
-        colors = ["#00A8FF", "#00EEFF", "#00FF00", "#FF00FF", "#FFD700"]
+        self.color_var = tk.StringVar(value="#00FF00")
+        colors = ["#00FF00", "#00A8FF", "#00EEFF", "#FF00FF", "#FFD700"]
         color_combo = ttk.Combobox(color_frame, textvariable=self.color_var, values=colors, width=12)
         color_combo.pack(side="left", padx=5)
         color_combo.bind("<<ComboboxSelected>>", lambda e: self.create_progress_bar())

@@ -257,30 +257,52 @@ class ModernProgressBar:
                                        fill=self.color, outline="")
     
     def _draw_neon_pulse_style(self):
-        """Full-width neon line with pulsing glow effect."""
-        # Calculate pulse intensity (0.3 to 1.0) using sine wave
+        """Full-width neon line with smooth fade in/out effect."""
+        # Calculate pulse intensity (0.0 to 1.0) using sine wave - smooth fade
         import math
-        pulse = 0.3 + 0.7 * (math.sin(self.pulse_phase * 2 * math.pi) + 1) / 2
+        pulse = (math.sin(self.pulse_phase * 2 * math.pi) + 1) / 2  # 0.0 to 1.0
         
-        # Far outer glow (very subtle, pulsing)
+        # Only draw if pulse is visible (fade in/out effect)
+        if pulse < 0.05:
+            return  # Completely faded out
+        
+        # Calculate opacity-like effect using stipple patterns
+        if pulse < 0.2:
+            stipple_far = "gray87"
+            stipple_med = "gray75"
+        elif pulse < 0.4:
+            stipple_far = "gray75"
+            stipple_med = "gray62"
+        elif pulse < 0.6:
+            stipple_far = "gray50"
+            stipple_med = "gray37"
+        elif pulse < 0.8:
+            stipple_far = "gray37"
+            stipple_med = "gray25"
+        else:
+            stipple_far = "gray25"
+            stipple_med = "gray12"
+        
+        # Far outer glow (very subtle, pulsing with intensity)
         self.canvas.create_rectangle(0, 0, self.width, self.height,
                                    fill=self.color, outline="", 
-                                   stipple="gray75" if pulse > 0.6 else "gray85")
+                                   stipple=stipple_far)
         
-        # Medium glow (more visible, pulsing)
+        # Medium glow (more visible, pulsing with intensity)
         self.canvas.create_rectangle(0, 0, self.width, self.height,
                                    fill=self.color, outline="",
-                                   stipple="gray50" if pulse > 0.5 else "gray62")
+                                   stipple=stipple_med)
         
-        # Bright neon core (always solid, intensity varies with pulse)
-        self.canvas.create_rectangle(0, 0, self.width, self.height,
-                                   fill=self.color, outline="")
+        # Bright neon core (solid, fades in/out smoothly)
+        if pulse > 0.2:
+            self.canvas.create_rectangle(0, 0, self.width, self.height,
+                                       fill=self.color, outline="")
         
-        # Highlight effect based on pulse phase
-        if pulse > 0.7:
+        # Highlight effect - strongest when pulse is high
+        if pulse > 0.6:
             self.canvas.create_rectangle(0, 0, self.width, self.height,
                                        fill="#FFFFFF", outline="", 
-                                       stipple="gray25")
+                                       stipple="gray12")
     
     def _draw_smooth_style(self):
         """Smooth wave-like animation."""
