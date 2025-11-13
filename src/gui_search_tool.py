@@ -272,12 +272,14 @@ class MasterSearchGUI:
         log_frame.grid_rowconfigure(3, weight=1)
         log_frame.grid_columnconfigure(0, weight=1)
 
-        # Modern progress bar - use full available width (will be resized by grid)
-        # Use larger initial width so it scales properly
-        self.progress = ModernProgressBar(log_frame, width=800, height=14, color="#00FF00", style="neon-pulse")
+        # Modern progress bar - use large initial width for proper scaling
+        self.progress = ModernProgressBar(log_frame, width=1000, height=14, color="#00FF00", style="neon-pulse")
         
         # Keep reference to the canvas for grid management
         self.progress.canvas.grid(row=0, column=0, sticky="ew", pady=(0, 5))
+        
+        # Bind window resize event to update progress bar width
+        self.root.bind("<Configure>", self.on_window_resize)
 
         self.status_var = tk.StringVar(value=i18n.tr("status_ready"))
         self.status_label = ttk.Label(log_frame, textvariable=self.status_var, font=("Segoe UI", 9))
@@ -366,6 +368,24 @@ class MasterSearchGUI:
         self.log_text.insert(tk.END, formatted_message)
         self.log_text.see(tk.END)
         self.root.update_idletasks()
+
+    def on_window_resize(self, event):
+        """Handle window resize events and update progress bar width."""
+        try:
+            # Get the log frame's current width
+            log_frame = event.widget
+            if hasattr(self, 'progress') and self.progress:
+                # Calculate available width (account for padding)
+                available_width = max(self.root.winfo_width() - 40, 400)  # Min 400px
+                
+                # Update progress bar canvas width
+                if self.progress.canvas and available_width > 0:
+                    self.progress.width = available_width
+                    self.progress.canvas.config(width=available_width)
+                    # Redraw with new width
+                    self.progress._draw_progress()
+        except:
+            pass  # Ignore errors during resize
 
     def update_status(self, message):
         self.status_var.set(message)
