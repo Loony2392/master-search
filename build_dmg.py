@@ -268,17 +268,29 @@ setup(
             
             print("✅ App Bundle created successfully")
             
-            # Check if app was created
-            app_path = self.dist_folder / f"{self.app_name}.app"
-            if app_path.exists():
-                print(f"✅ App Bundle found at: {app_path}")
+            # py2app always builds to dist/, so we need to move it to releases/macos/
+            default_dist = self.project_root / 'dist'
+            app_path_source = default_dist / f"{self.app_name}.app"
+            app_path_target = self.dist_folder / f"{self.app_name}.app"
+            
+            if app_path_source.exists():
+                # Ensure target directory exists
+                self.dist_folder.mkdir(parents=True, exist_ok=True)
+                
+                # Remove target if it exists
+                if app_path_target.exists():
+                    shutil.rmtree(app_path_target)
+                
+                # Move app to releases/macos/
+                shutil.move(str(app_path_source), str(app_path_target))
+                print(f"✅ Moved App Bundle to: {app_path_target}")
                 
                 # Fix: Manually copy _tkinter module that py2app sometimes misses
-                self._fix_tkinter_in_app(app_path)
+                self._fix_tkinter_in_app(app_path_target)
                 
-                return app_path
+                return app_path_target
             else:
-                print(f"❌ App Bundle not found at expected location: {app_path}")
+                print(f"❌ App Bundle not found at expected location: {app_path_source}")
                 return False
             
         except Exception as e:
@@ -438,19 +450,29 @@ Version: {self.version}
         
         # Mount DMG for customization
         print("   Mounting DMG for customization...")
-        mount_cmd = ['hdiutil', 'attach', str(temp_dmg), '-readwrite', '-noverify']
+        mount_cmd = ['hdiutil', 'attach', str(temp_dmg), '-readwrite', '-noverify', '-plist']
         mount_result = subprocess.run(mount_cmd, capture_output=True, text=True)
         
         if mount_result.returncode != 0:
             print(f"❌ Could not mount DMG: {mount_result.stderr}")
             return False
         
-        # Extract mount point
+        # Extract mount point from plist output
+        import plistlib
         mount_point = None
-        for line in mount_result.stdout.splitlines():
-            if '/Volumes/' in line:
-                mount_point = line.split()[-1]
-                break
+        try:
+            plist_data = plistlib.loads(mount_result.stdout.encode())
+            for item in plist_data.get('system-entities', []):
+                if 'mount-point' in item:
+                    mount_point = item['mount-point']
+                    break
+        except Exception as e:
+            print(f"   ⚠️  Could not parse plist: {e}")
+            # Fallback: try to find mount point manually
+            for line in mount_result.stdout.splitlines():
+                if '/Volumes/' in line:
+                    mount_point = line.strip()
+                    break
         
         if mount_point:
             print(f"   DMG mounted at: {mount_point}")
@@ -463,7 +485,12 @@ Version: {self.version}
             
             # Unmount
             print("   Unmounting DMG...")
-            subprocess.run(['hdiutil', 'detach', mount_point], capture_output=True)
+            detach_result = subprocess.run(['hdiutil', 'detach', mount_point], capture_output=True, text=True)
+            if detach_result.returncode != 0:
+                print(f"   ⚠️  Detach issue: {detach_result.stderr.strip()}")
+                # Try force detach
+                subprocess.run(['hdiutil', 'detach', mount_point, '-force'], capture_output=True)
+            time.sleep(1)  # Give system time to fully detach
         
         # Convert to compressed DMG
         print("   Converting to compressed DMG...")
