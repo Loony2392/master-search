@@ -4,8 +4,8 @@
 
 > Professional file search tool with advanced features and German localization
 
-![Version](https://img.shields.io/badge/version-2025.11.10-blue.svg)
-![Python](https://img.shields.io/badge/python-3.8+-green.svg)
+![Version](https://img.shields.io/badge/version-2025.11.13-blue.svg)
+![Python](https://img.shields.io/badge/python-3.12+-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-orange.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)
 
@@ -67,18 +67,27 @@
 
 ## 📦 Installation
 
-### Option 1: Windows MSI Installer (Recommended)
+### Option 1: macOS DMG Package (Recommended for macOS)
 
-1. Download the latest `Master_Search_v2025.11.10_Windows.msi` from [Releases](https://github.com/Loony2392/master-search/releases)
+1. Download the latest `Master_Search_v2025.11.13_FINAL.dmg` from [Releases](https://github.com/Loony2392/master-search/releases)
+2. Double-click the DMG to mount it
+3. Drag the "Master Search" app to your Applications folder
+4. Launch from Applications or Spotlight (Cmd+Space)
+
+**Benefits:** Native macOS app, optimized for Apple Silicon & Intel, no dependencies required
+
+### Option 2: Windows MSI Installer (Recommended for Windows)
+
+1. Download the latest `Master_Search_vXXXX.XX.XX_Windows.msi` from [Releases](https://github.com/Loony2392/master-search/releases)
 2. Double-click the MSI and follow the installation wizard
 3. Launch from Start Menu → "Master Search" or run from terminal
 
 **Benefits:** No Python required, clean Windows integration, automatic uninstaller
 
-### Option 2: Python Source (All Platforms)
+### Option 3: Python Source (All Platforms)
 
 **Requirements:**
-- Python 3.8 or higher
+- Python 3.12 or higher
 - pip package manager
 
 **Installation:**
@@ -94,16 +103,6 @@ pip install -r requirements.txt
 python gui_main.py
 ```
 
-### Option 3: macOS Native Package
-
-```bash
-# Download and extract
-curl -L https://github.com/Loony2392/master-search/releases/latest/download/Master_Search_v2025.11.10_macOS.zip -o master-search.zip
-unzip master-search.zip
-cd master-search
-python gui_main.py
-```
-
 ### Option 4: Build from Source
 
 For developers who want to build custom versions:
@@ -111,6 +110,9 @@ For developers who want to build custom versions:
 ```bash
 # Install build dependencies
 pip install -r requirements-dev.txt
+
+# Build macOS DMG (macOS only)
+python build_dmg.py
 
 # Build Windows MSI (Windows only)
 python build_msi.py
@@ -497,6 +499,14 @@ See [.github/workflows/README.md](.github/workflows/README.md) for detailed work
 ---
 
 ## 📝 Changelog
+
+### 🎉 **Version 2025.11.13** (November 2025)
+- **🍎 macOS Native DMG Package**: Professional app bundle with Python 3.12 + tkinter
+- **🔧 Release Organization**: Structured `releases/` folder for macOS, Windows, and Linux
+- **✨ Build System Refactor**: Updated py2app, PyInstaller, and cx_Freeze configurations
+- **🌍 Cross-Platform Config**: Platform-aware paths (macOS, Linux, Windows)
+- **🧪 Test Infrastructure**: Pytest setup with conftest.py and import path resolution
+- **🚀 Production Ready**: All build scripts configured for distribution
 
 ### 🎉 **Version 2025.11.10** (November 2025)
 - **🌍 Complete German Localization**: 138+ UI elements fully translated
