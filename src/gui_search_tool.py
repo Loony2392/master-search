@@ -155,6 +155,7 @@ class MasterSearchGUI:
         # Stop flag for search interruption
         self.stop_search_flag = False
         self.search_thread = None
+        self.current_search_tool = None  # Reference to current search tool for stop propagation
 
     def setup_ui(self):
         main_frame = ttk.Frame(self.root, padding="10")
@@ -407,6 +408,9 @@ class MasterSearchGUI:
     def stop_search(self):
         """Stop the search and generate report with collected data."""
         self.stop_search_flag = True
+        # Propagate stop to search tool if running
+        if hasattr(self, 'current_search_tool') and self.current_search_tool:
+            self.current_search_tool.stop_requested = True
         self.stop_btn.config(state="disabled")
         self.log(i18n.tr("search_stopped"))
         self.update_status(i18n.tr("search_stopped_msg"))
@@ -457,6 +461,7 @@ class MasterSearchGUI:
 
             # Create search tool instance (verbose=False to suppress console output)
             search_tool = FileSearchTool(verbose=False)
+            self.current_search_tool = search_tool  # Store reference for stop propagation
             search_tool.search_path = search_params["directory"]
             search_tool.search_terms = search_params["terms"]
             search_tool.search_mode = search_params["mode"].lower() 
@@ -545,6 +550,8 @@ class MasterSearchGUI:
             self.root.after(0, lambda: messagebox.showerror(i18n.tr("error"), error_msg))
 
         finally:
+            # Clean up search tool reference
+            self.current_search_tool = None
             self.root.after(0, self.search_finished)
 
     def on_search_status_update(self, status_data):

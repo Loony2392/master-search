@@ -130,6 +130,9 @@ class FileSearchTool:
         self.progress_lock = threading.Lock()
         self.current_progress = {'files': 0, 'processed': 0, 'matches': 0}
         
+        # Stop-Flag für schnelle Unterbrechung
+        self.stop_requested = False
+        
         # Real-time status callback
         self.status_callback = None  # Callback-Funktion für GUI-Updates
     
