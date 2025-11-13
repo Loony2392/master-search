@@ -48,7 +48,7 @@ from performance_config import (
 from .settings_manager import get_settings_manager
 from . import i18n
 from .platform_utils import PlatformUtils, get_temp_dir, open_folder
-from .loading_animations import ModernProgressBar, HorizontalPulseLoader, show_loading
+from .loading_animations import ModernProgressBar, ModernBounceLoader, LoadingOverlay, show_loading
 
 # Create a simple config dict for compatibility
 PERFORMANCE_CONFIG = {
@@ -273,7 +273,7 @@ class MasterSearchGUI:
         log_frame.grid_columnconfigure(0, weight=1)
 
         # Modern progress bar instead of standard ttk
-        self.progress = ModernProgressBar(log_frame, width=600, height=8, color="#00A8FF")
+        self.progress = ModernProgressBar(log_frame, width=600, height=12, color="#00A8FF", style="shimmer")
         
         # Keep reference to the canvas for grid management
         self.progress.canvas.grid(row=0, column=0, sticky="ew", pady=(0, 5))

@@ -139,7 +139,7 @@ class ModernProgressBar:
         self.height = height
         self.color = color
         self.bg_color = bg_color
-        self.style = style  # "gradient", "neon", "smooth", "multi"
+        self.style = style  # "gradient", "neon", "smooth", "multi", "shimmer"
         
         # Create canvas for custom drawing
         self.canvas = tk.Canvas(parent, width=width, height=height, 
@@ -173,6 +173,8 @@ class ModernProgressBar:
                 self._draw_smooth_style()
             elif self.style == "multi":
                 self._draw_multi_style()
+            elif self.style == "shimmer":
+                self._draw_shimmer_style()
             else:
                 self._draw_gradient_style()
         else:
@@ -273,6 +275,31 @@ class ModernProgressBar:
                                            min(self.width, seg_x + segment_width), 
                                            self.height,
                                            fill=colors[i % len(colors)], outline="")
+    
+    def _draw_shimmer_style(self):
+        """Spectacular shimmer effect with multiple light reflections."""
+        # Full shimmer width
+        shimmer_width = 120
+        x_pos = (self.animation_offset % (self.width + shimmer_width)) - shimmer_width
+        
+        # Draw multiple light layers for shimmer effect
+        # Layer 1: Dark outer glow
+        self.canvas.create_rectangle(max(0, x_pos - 30), 0, min(self.width, x_pos + shimmer_width + 30), self.height,
+                                   fill=self.color, outline="", stipple="gray75")
+        
+        # Layer 2: Medium glow
+        self.canvas.create_rectangle(max(0, x_pos - 15), 0, min(self.width, x_pos + shimmer_width + 15), self.height,
+                                   fill=self.color, outline="", stipple="gray50")
+        
+        # Layer 3: Bright shimmer core
+        self.canvas.create_rectangle(max(0, x_pos), 0, min(self.width, x_pos + shimmer_width), self.height,
+                                   fill=self.color, outline="")
+        
+        # Layer 4: Ultra-bright highlight at the leading edge
+        highlight_x = max(0, x_pos + shimmer_width - 10)
+        if highlight_x < self.width:
+            self.canvas.create_rectangle(highlight_x, 0, min(self.width, highlight_x + 8), self.height,
+                                       fill="#FFFFFF", outline="")
     
     def set_progress(self, value: float):
         """Set progress value (0.0 to 1.0)."""
