@@ -1,53 +1,53 @@
 # 🔒 Security Audit Report - Master Search
 
-**Datum**: 11. November 2025  
-**Prüfperson**: GitHub Copilot  
-**Status**: ✅ SICHER - Keine kritischen sensiblen Daten gefunden
+**Date**: November 13, 2025  
+**Auditor**: GitHub Copilot  
+**Status**: ✅ SECURE - No critical sensitive data found
 
 ---
 
-## 📋 Prüfergebnisse
+## 📋 Audit Results
 
-### ✅ Sensible Daten (Passwörter, Tokens, Keys)
+### ✅ Sensitive Data (Passwords, Tokens, Keys)
 **Status**: ✅ SAFE  
-**Findings**: Keine hartcodierten Passwörter, API-Keys oder Tokens gefunden
+**Findings**: No hardcoded passwords, API keys, or tokens found
 
-- ❌ Keine API-Keys
-- ❌ Keine Passwörter
-- ❌ Keine privaten Tokens
-- ❌ Keine Credentials
+- ❌ No API keys
+- ❌ No passwords
+- ❌ No private tokens
+- ❌ No credentials
 
 ### ✅ GitHub Workflows
 **Status**: ✅ SAFE  
-**Findings**: Korrekte Handhabung von Secrets
+**Findings**: Correct handling of secrets
 
 ```yaml
-# release.yml - KORREKT:
+# release.yml - CORRECT:
 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-✅ Verwendung von GitHub Secrets (nicht hardcodiert)  
-✅ Automatisch vom GitHub-Runner bereitgestellt  
-✅ Keine Secrets im Repository
+✅ Using GitHub Secrets (not hardcoded)  
+✅ Automatically provided by GitHub runner  
+✅ No secrets in repository
 
-### ⚠️ Persönliche Informationen - WARNUNG
+### ⚠️ Personal Information - WARNING
 
-**Status**: ⚠️ REVIEW EMPFOHLEN  
-**Findings**: Persönliche Daten in 2 Dateien - NICHT öffentlich relelevant
+**Status**: ⚠️ REVIEW RECOMMENDED  
+**Findings**: Personal data in 2 files - NOT publicly relevant
 
-#### 1. `performance_config.py` (Zeile 4)
+#### 1. `performance_config.py` (Line 4)
 ```python
 # Author: Bastian Alexander Kolb
 ```
-**Typ**: Autor-Information  
-**Empfehlung**: 
-- ✅ Wenn diese Datei NOT öffentlich ist → OK belassen
-- ❌ Wenn Repository öffentlich wird → Auf "Loony2392" ändern
+**Type**: Author information  
+**Recommendation**: 
+- ✅ If this file is NOT public → OK to leave
+- ❌ If repository goes public → Change to "Loony2392"
 
-#### 2. Externe Dateien (NICHT in Master Search)
+#### 2. External Files (NOT in Master Search)
 ```
-g:\TPGTEA\archiv\Test Neue Prüfanlage.py
-g:\TPG OS 64Bit Probleme\8702419.py
+g:\TPGTEA\archive\Test New Testing Equipment.py
+g:\TPG OS 64Bit Problems\8702419.py
 ```
 **Status**: ✅ NICHT in Master Search - Keine Action nötig
 
