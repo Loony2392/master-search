@@ -272,8 +272,9 @@ class MasterSearchGUI:
         log_frame.grid_rowconfigure(3, weight=1)
         log_frame.grid_columnconfigure(0, weight=1)
 
-        # Modern progress bar instead of standard ttk
-        self.progress = ModernProgressBar(log_frame, width=600, height=12, color="#00FF00", style="neon-pulse")
+        # Modern progress bar - use full available width (will be resized by grid)
+        # Use larger initial width so it scales properly
+        self.progress = ModernProgressBar(log_frame, width=800, height=14, color="#00FF00", style="neon-pulse")
         
         # Keep reference to the canvas for grid management
         self.progress.canvas.grid(row=0, column=0, sticky="ew", pady=(0, 5))
