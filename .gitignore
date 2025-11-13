@@ -107,3 +107,113 @@ docs/.doctrees/
 # Temporary files
 *.tmp
 *.temp
+
+# === INTERNE TESTS & ENTWICKLUNG ===
+
+# Lokale Test-Scripts & Ergebnisse
+test_workflows_locally.ps1
+local_workflow_simulation.ps1
+LOCAL_TEST_RESULTS.md
+test_complete_translations.py
+test_locales.py
+test_modern_gui.py
+run_tests.py
+
+# Performance & Memory Testing
+test_realtime_display.py
+test_report_generator.py
+test_file_compatibility.py
+test_line_numbers.py
+test_all.py
+performance_tests/
+memory_profile.py
+*.prof
+memory_usage.dat
+performance_baseline.json
+
+# Script-spezifische Test-Dateien
+scripts/test_*.py
+scripts/check_*.py
+scripts/validate_*.py
+check_extensions.py
+check_file_types.py
+
+# Temporäre Test-Verzeichnisse
+test_build_simulation/
+test_perf_data/
+organized_artifacts/
+release_artifacts/
+
+# Workflow-Testing & Act
+.actrc
+.secrets
+act.exe
+act/
+act.zip
+act_temp/
+github_debug.log
+workflow_*.log
+
+# Reorganisation & Cleanup Dokumentation
+PROJECT_REORGANIZATION_SUMMARY.md
+CLEANUP_SUCCESS_SUMMARY.md
+repair_paths.py
+.reorganized
+FILETYPE_INTEGRATION_REPORT.md
+IMPLEMENTATION_MANIFEST_v*.md
+IMPLEMENTATION_CHECKLIST_v*.md
+
+# Build & Release Dokumentation (intern)
+BUILD_SUMMARY_v*.md
+CHANGE_SUMMARY_v*.md
+VERSION_*_SUMMARY.md
+COMPLETE_LOCALIZATION_REPORT.md
+ANIMATION_VERSION_UPDATE.md
+REALTIME_DISPLAY_FEATURE.md
+REALTIME_FEATURE_SUMMARY.txt
+REPORT_DOWNLOAD_FEATURE.md
+
+# Testing Guides (intern)
+WORKFLOW_TESTING_QUICKSTART.md
+GITHUB_PUSH_GUIDE.md
+LOCAL_TESTING_GUIDE.md
+UPDATE_NOTIFIER_USAGE.md
+
+# Icon Content Cache
+icon_content.txt
+
+# MSI Build Setup & temporäre Dateien
+build_msi.py
+setup_msi.py
+*.msi.bak
+build/exe.win-amd64-*/
+
+# Release Notes (interne Versionen)
+RELEASE_NOTES_v*.md
+BUG_FIXES_REPORT.md
+BUGFIX_REPORT_GENERATOR.md
+
+# Personal Development Files
+.personal/
+personal_notes.md
+TODO_INTERNAL.md
+dev_scratch.py
+
+# Coverage & Quality Reports (intern)
+.coverage_html/
+quality_reports/
+pylint_report.txt
+flake8_report.txt
+
+# VS Code Tasks (projekt-spezifisch)
+.vscode/tasks.json
+
+# Verification & Testing
+VERIFICATION_REPORT.py
+DATA_TYPE_VERIFICATION_SUMMARY.md
+FILE_TYPES_UPDATE.md
+
+# Lokale Konfigurationsdateien
+local_config.json
+dev_settings.json
+personal_preferences.json

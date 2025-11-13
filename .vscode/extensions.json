@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "github.vscode-github-actions",
+        "redhat.vscode-yaml", 
+        "ms-vscode.powershell",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-vscode.vscode-json"
+    ]
+}

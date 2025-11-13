@@ -242,50 +242,197 @@ jobs:
     - name: Build Windows MSI
       if: matrix.os == 'windows-latest'
       run: |
+        echo "🏗️ Building Windows MSI installer..."
         pip install cx_Freeze
+        
+        # Run MSI build
         python build_msi.py
         
-        # Find and rename MSI file
-        $msiFile = Get-ChildItem -Path "build" -Recurse -Filter "Master Search-*.msi" | Select-Object -First 1
-        if ($msiFile) {
+        # Find MSI file in build directory
+        $msiFiles = Get-ChildItem -Path "." -Recurse -Filter "*.msi" | Where-Object { $_.Name -like "*Master Search*" }
+        if ($msiFiles.Count -eq 0) {
+          $msiFiles = Get-ChildItem -Path "build" -Recurse -Filter "*.msi" 2>$null
+        }
+        if ($msiFiles.Count -eq 0) {
+          $msiFiles = Get-ChildItem -Path "dist" -Recurse -Filter "*.msi" 2>$null
+        }
+        
+        if ($msiFiles.Count -gt 0) {
+          $msiFile = $msiFiles | Select-Object -First 1
           $newName = "Master_Search_v${{ needs.validate-release.outputs.version }}_Windows.msi"
           $destPath = "release_builds"
           New-Item -ItemType Directory -Force -Path $destPath
           Copy-Item $msiFile.FullName "$destPath\$newName"
           Write-Host "✅ Windows MSI created: $newName"
+          Write-Host "📦 Size: $([math]::Round((Get-Item "$destPath\$newName").Length / 1MB, 2)) MB"
         } else {
-          Write-Error "❌ MSI file not found"
+          Write-Error "❌ MSI file not found. Checking available files:"
+          Get-ChildItem -Recurse -Filter "*.msi" | ForEach-Object { Write-Host "Found: $($_.FullName)" }
+          exit 1
         }
       shell: pwsh
     
     - name: Build macOS DMG
       if: matrix.os == 'macos-latest'
       run: |
-        # Install py2app for macOS builds
+        echo "🍎 Building macOS DMG package..."
+        
+        # Install macOS build dependencies
         pip install py2app
+        pip install dmgbuild || true  # Optional for advanced DMG creation
         
-        # Create basic DMG (simplified for now)
+        # Create app bundle directory structure
         mkdir -p release_builds
-        zip -r "release_builds/Master_Search_v${{ needs.validate-release.outputs.version }}_macOS.zip" . \
-          -x "*.git*" "*/__pycache__/*" "*/build/*" "*/dist/*" "*.pyc" "*.pyo"
+        APP_NAME="Master Search"
+        APP_DIR="release_builds/${APP_NAME}.app"
         
-        echo "✅ macOS package created"
+        # Create basic app bundle structure
+        mkdir -p "${APP_DIR}/Contents/MacOS"
+        mkdir -p "${APP_DIR}/Contents/Resources"
+        
+        # Create Info.plist
+        cat > "${APP_DIR}/Contents/Info.plist" << 'EOF'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>CFBundleExecutable</key>
+            <string>master_search</string>
+            <key>CFBundleIdentifier</key>
+            <string>de.loony-tech.master-search</string>
+            <key>CFBundleName</key>
+            <string>Master Search</string>
+            <key>CFBundleVersion</key>
+            <string>${{ needs.validate-release.outputs.version }}</string>
+            <key>CFBundleShortVersionString</key>
+            <string>${{ needs.validate-release.outputs.version }}</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+        </dict>
+        </plist>
+        EOF
+        
+        # Create launcher script
+        cat > "${APP_DIR}/Contents/MacOS/master_search" << 'EOF'
+        #!/bin/bash
+        cd "$(dirname "$0")/../Resources"
+        python3 gui_main.py
+        EOF
+        chmod +x "${APP_DIR}/Contents/MacOS/master_search"
+        
+        # Copy Python sources to Resources
+        cp -r *.py "${APP_DIR}/Contents/Resources/" || true
+        cp -r locales "${APP_DIR}/Contents/Resources/" || true
+        cp -r media "${APP_DIR}/Contents/Resources/" || true
+        cp requirements.txt "${APP_DIR}/Contents/Resources/" || true
+        
+        # Create DMG
+        DMG_NAME="Master_Search_v${{ needs.validate-release.outputs.version }}_macOS.dmg"
+        
+        # Create temporary DMG
+        hdiutil create -size 100m -fs HFS+ -volname "Master Search" temp.dmg
+        
+        # Mount and copy app
+        hdiutil attach temp.dmg -mountpoint /Volumes/temp_mount
+        cp -r "${APP_DIR}" /Volumes/temp_mount/
+        
+        # Create Applications symlink
+        ln -s /Applications /Volumes/temp_mount/Applications
+        
+        # Unmount and convert to final DMG
+        hdiutil detach /Volumes/temp_mount
+        hdiutil convert temp.dmg -format UDZO -o "release_builds/${DMG_NAME}"
+        rm temp.dmg
+        
+        echo "✅ macOS DMG created: ${DMG_NAME}"
+        echo "📦 Size: $(du -h "release_builds/${DMG_NAME}" | cut -f1)"
     
-    - name: Build Linux Source
+    - name: Build Linux Source & AppImage
       if: matrix.os == 'ubuntu-latest'
       run: |
+        echo "🐧 Building Linux packages..."
         mkdir -p release_builds
         
-        # Create source distribution
-        pip install build
+        # Install build dependencies
+        pip install build setuptools wheel
+        
+        # 1. Create source distribution
+        echo "📦 Creating source distribution..."
         python -m build --sdist
-        cp dist/*.tar.gz "release_builds/Master_Search_v${{ needs.validate-release.outputs.version }}_Source.tar.gz"
+        if [ -f dist/*.tar.gz ]; then
+          cp dist/*.tar.gz "release_builds/Master_Search_v${{ needs.validate-release.outputs.version }}_Source.tar.gz"
+          echo "✅ Source tarball created"
+        fi
         
-        # Create standalone zip
+        # 2. Create standalone zip
+        echo "📦 Creating standalone zip..."
         zip -r "release_builds/Master_Search_v${{ needs.validate-release.outputs.version }}_Source.zip" . \
-          -x "*.git*" "*/__pycache__/*" "*/build/*" "*/dist/*" "*.pyc" "*.pyo"
+          -x "*.git*" "*/__pycache__/*" "*/build/*" "*/dist/*" "*.pyc" "*.pyo" \
+             "*/release_builds/*" "*/.pytest_cache/*" "*/.coverage*"
+        echo "✅ Standalone zip created"
         
-        echo "✅ Linux source packages created"
+        # 3. Create Debian package structure (basic)
+        echo "📦 Creating Debian package structure..."
+        DEB_DIR="master-search-${{ needs.validate-release.outputs.version }}"
+        mkdir -p "${DEB_DIR}/DEBIAN"
+        mkdir -p "${DEB_DIR}/usr/local/bin"
+        mkdir -p "${DEB_DIR}/usr/share/applications"
+        mkdir -p "${DEB_DIR}/usr/share/master-search"
+        
+        # Create control file
+        cat > "${DEB_DIR}/DEBIAN/control" << 'EOF'
+        Package: master-search
+        Version: ${{ needs.validate-release.outputs.version }}
+        Section: utils
+        Priority: optional
+        Architecture: all
+        Depends: python3 (>= 3.8), python3-tk
+        Maintainer: Loony2392 <b.kolb@loony-tech.de>
+        Description: Professional file search tool
+         Master Search is a powerful desktop tool for full-text file system search
+         with advanced filtering options and beautiful HTML reports.
+        EOF
+        
+        # Copy application files
+        cp -r *.py "${DEB_DIR}/usr/share/master-search/"
+        cp -r locales "${DEB_DIR}/usr/share/master-search/" || true
+        cp -r media "${DEB_DIR}/usr/share/master-search/" || true
+        cp requirements.txt "${DEB_DIR}/usr/share/master-search/"
+        
+        # Create launcher script
+        cat > "${DEB_DIR}/usr/local/bin/master-search" << 'EOF'
+        #!/bin/bash
+        cd /usr/share/master-search
+        python3 gui_main.py "$@"
+        EOF
+        chmod +x "${DEB_DIR}/usr/local/bin/master-search"
+        
+        # Create desktop file
+        cat > "${DEB_DIR}/usr/share/applications/master-search.desktop" << 'EOF'
+        [Desktop Entry]
+        Name=Master Search
+        Comment=Professional file search tool
+        Exec=master-search
+        Icon=master-search
+        Terminal=false
+        Type=Application
+        Categories=Utility;FileTools;
+        EOF
+        
+        # Build DEB package
+        dpkg-deb --build "${DEB_DIR}" "release_builds/Master_Search_v${{ needs.validate-release.outputs.version }}_Linux.deb"
+        echo "✅ Debian package created"
+        
+        # 4. Create portable Linux archive
+        echo "📦 Creating portable Linux archive..."
+        tar -czf "release_builds/Master_Search_v${{ needs.validate-release.outputs.version }}_Linux_Portable.tar.gz" \
+          --exclude=".git*" --exclude="__pycache__" --exclude="build" --exclude="dist" \
+          --exclude="release_builds" --exclude=".pytest_cache" --exclude=".coverage*" \
+          *.py locales/ media/ requirements.txt README.md LICENSE || true
+        
+        echo "✅ All Linux packages created"
+        echo "📊 Package sizes:"
+        ls -lh release_builds/ | grep Master_Search
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
@@ -311,6 +458,27 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         path: ./release_artifacts
+    
+    - name: List and organize artifacts
+      if: needs.build-artifacts.result == 'success'
+      run: |
+        echo "📦 Downloaded build artifacts:"
+        find ./release_artifacts -type f | while read file; do
+          echo "  📁 $file ($(du -h "$file" 2>/dev/null | cut -f1 || echo '0B'))"
+        done
+        
+        echo "🔧 Organizing artifacts..."
+        mkdir -p ./organized_artifacts
+        
+        # Copy all build artifacts to organized directory
+        find ./release_artifacts -name "*.msi" -exec cp {} ./organized_artifacts/ \;
+        find ./release_artifacts -name "*.dmg" -exec cp {} ./organized_artifacts/ \;
+        find ./release_artifacts -name "*.zip" -exec cp {} ./organized_artifacts/ \;
+        find ./release_artifacts -name "*.tar.gz" -exec cp {} ./organized_artifacts/ \;
+        find ./release_artifacts -name "*.deb" -exec cp {} ./organized_artifacts/ \;
+        
+        echo "✅ Final artifacts for release:"
+        ls -lah ./organized_artifacts/ || echo "No organized artifacts found"
     
     - name: Create Git tag
       if: github.event_name == 'workflow_dispatch'
@@ -349,7 +517,7 @@ jobs:
         ## 📋 Übersicht / Overview
 
         **Deutsch:**
-        Professional file search tool mit vollständiger deutscher Lokalisierung und modernen Animationen.
+        Professionelles Datei-Suchprogramm mit vollständiger deutscher Lokalisierung und modernen Animationen.
 
         **English:**
         Professional file search tool with complete German localization and modern animations.
@@ -366,45 +534,90 @@ jobs:
 
         Choose your platform / Wählen Sie Ihre Plattform:
 
-        - **Windows**: `Master_Search_v${{ needs.validate-release.outputs.version }}_Windows.msi` (Installer)
-        - **macOS**: `Master_Search_v${{ needs.validate-release.outputs.version }}_macOS.zip` (Native Package)
-        - **Linux/Source**: `Master_Search_v${{ needs.validate-release.outputs.version }}_Source.tar.gz` (Python source)
+        ### Windows
+        - `Master_Search_v${{ needs.validate-release.outputs.version }}_Windows.msi` - **Windows Installer (empfohlen/recommended)**
 
-        ## 🚀 Quick Start
+        ### macOS
+        - `Master_Search_v${{ needs.validate-release.outputs.version }}_macOS.dmg` - **macOS DMG Package**
+
+        ### Linux
+        - `Master_Search_v${{ needs.validate-release.outputs.version }}_Linux.deb` - **Debian/Ubuntu Package**
+        - `Master_Search_v${{ needs.validate-release.outputs.version }}_Linux_Portable.tar.gz` - **Portable Linux Archive**
+
+        ### Source Code
+        - `Master_Search_v${{ needs.validate-release.outputs.version }}_Source.tar.gz` - **Python Source Distribution**
+        - `Master_Search_v${{ needs.validate-release.outputs.version }}_Source.zip` - **Source ZIP Archive**
+
+        ## 🚀 Installation / Quick Start
 
         ### Windows
-        ```bash
-        # Download and run installer
-        Master_Search_v${{ needs.validate-release.outputs.version }}_Windows.msi
-        ```
+        1. Download `Master_Search_v${{ needs.validate-release.outputs.version }}_Windows.msi`
+        2. Run installer as administrator
+        3. Follow installation wizard
+        4. Launch from Start Menu
 
         ### macOS  
+        1. Download `Master_Search_v${{ needs.validate-release.outputs.version }}_macOS.dmg`
+        2. Mount DMG file
+        3. Drag "Master Search.app" to Applications folder
+        4. Launch from Applications
+
+        ### Linux (Debian/Ubuntu)
         ```bash
-        # Download and extract
-        unzip Master_Search_v${{ needs.validate-release.outputs.version }}_macOS.zip
-        cd master-search-*
-        python gui_main.py
+        # Download and install
+        sudo dpkg -i Master_Search_v${{ needs.validate-release.outputs.version }}_Linux.deb
+        sudo apt-get install -f  # Fix dependencies if needed
+        master-search
         ```
 
-        ### Linux/Source
+        ### Linux (Portable)
         ```bash
         # Extract and run
+        tar -xzf Master_Search_v${{ needs.validate-release.outputs.version }}_Linux_Portable.tar.gz
+        cd master-search-*
+        pip3 install -r requirements.txt
+        python3 gui_main.py
+        ```
+
+        ### From Source
+        ```bash
+        # Extract source
         tar -xzf Master_Search_v${{ needs.validate-release.outputs.version }}_Source.tar.gz
         cd master-search-*
+        
+        # Install dependencies
         pip install -r requirements.txt
+        
+        # Run application
         python gui_main.py
         ```
 
         ## 📖 Documentation / Dokumentation
 
-        - **User Guide (English)**: [USER_GUIDE_EN.md](USER_GUIDE_EN.md)
-        - **Benutzerhandbuch (Deutsch)**: [USER_GUIDE_DE.md](USER_GUIDE_DE.md)
-        - **Guide d'utilisateur (Français)**: [USER_GUIDE_FR.md](USER_GUIDE_FR.md)
+        - **User Guide (English)**: [USER_GUIDE_EN.md](https://github.com/Loony2392/master-search/blob/main/USER_GUIDE_EN.md)
+        - **Benutzerhandbuch (Deutsch)**: [USER_GUIDE_DE.md](https://github.com/Loony2392/master-search/blob/main/USER_GUIDE_DE.md)
+        - **Guide d'utilisateur (Français)**: [USER_GUIDE_FR.md](https://github.com/Loony2392/master-search/blob/main/USER_GUIDE_FR.md)
+
+        ## 🆕 What's New / Neue Features
+
+        This release includes major improvements to the user experience and cross-platform compatibility.
 
         ## 🐛 Bug Reports / Fehlerberichte
 
         - **English**: [Report bugs on GitHub](https://github.com/Loony2392/master-search/issues)
         - **Deutsch**: [Fehler auf GitHub melden](https://github.com/Loony2392/master-search/issues)
+
+        ## 💻 System Requirements / Systemanforderungen
+
+        ### Minimum
+        - **Windows**: Windows 10+ (64-bit)
+        - **macOS**: macOS 10.15+ (Catalina)
+        - **Linux**: Ubuntu 18.04+, Python 3.8+
+
+        ### Recommended  
+        - **RAM**: 4 GB+ for large file searches
+        - **Storage**: 100 MB free space
+        - **Python**: 3.8+ (for source installation)
 
         ---
 
@@ -417,7 +630,7 @@ jobs:
         
         echo "✅ Release notes prepared"
     
-    - name: Create GitHub Release
+    - name: Create GitHub Release with all artifacts
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ needs.validate-release.outputs.tag_name }}
@@ -426,8 +639,14 @@ jobs:
         prerelease: ${{ needs.validate-release.outputs.is_prerelease }}
         draft: false
         files: |
-          release_artifacts/**/*
+          ./organized_artifacts/*
+          ./release_artifacts/**/*.msi
+          ./release_artifacts/**/*.dmg
+          ./release_artifacts/**/*.zip
+          ./release_artifacts/**/*.tar.gz
+          ./release_artifacts/**/*.deb
         generate_release_notes: false
+        fail_on_unmatched_files: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
