@@ -15,16 +15,34 @@ import json
 import os
 from pathlib import Path
 import locale
+import sys
 
 # Config file location - use temp/appdata for portability
 def get_config_dir():
-    """Get user config directory - prefer AppData, fallback to temp"""
+    """Get user config directory - platform-aware (Windows/macOS/Linux)"""
     try:
-        config_dir = Path(os.path.expandvars(r'%APPDATA%\Master Search'))
-    except:
-        config_dir = Path(os.path.expandvars(r'%TEMP%\Master Search'))
+        if sys.platform == 'win32':
+            # Windows: use %APPDATA%
+            config_dir = Path(os.path.expandvars(r'%APPDATA%\Master Search'))
+        elif sys.platform == 'darwin':
+            # macOS: use ~/Library/Application Support
+            config_dir = Path.home() / 'Library' / 'Application Support' / 'Master Search'
+        else:
+            # Linux: use ~/.config
+            config_dir = Path.home() / '.config' / 'Master Search'
+    except Exception:
+        # Fallback: use system temp directory
+        import tempfile
+        config_dir = Path(tempfile.gettempdir()) / 'Master Search'
     
-    config_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        config_dir.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        # If we can't create (e.g., read-only FS), use temp as fallback
+        import tempfile
+        config_dir = Path(tempfile.gettempdir()) / 'Master Search'
+        config_dir.mkdir(parents=True, exist_ok=True)
+    
     return config_dir
 
 CONFIG_FILE = get_config_dir() / "language.json"
