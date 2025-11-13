@@ -389,7 +389,8 @@ class MasterSearchGUI:
         self.stop_search_flag = False
         self.search_btn.config(state="disabled", text=i18n.tr("search_started"))
         self.stop_btn.config(state="normal")
-        self.progress.start_indeterminate()
+        # Start with 0% progress (determinate mode will show actual progress)
+        self.progress.set_progress(0.0)
         self.log_text.delete(1.0, tk.END)
         
         # Reset stats
@@ -580,6 +581,10 @@ class MasterSearchGUI:
                     else:
                         speed = 0
                     
+                    # Update progress bar with actual progress (0.0 to 1.0)
+                    progress_value = processed / total if total > 0 else 0.0
+                    self.progress.set_progress(progress_value)
+                    
                     # Update display variables
                     self.files_processed_var.set(f"📁 Files: {processed:,}/{total:,}")
                     self.matches_found_var.set(f"🎯 Matches: {matches:,}")
@@ -590,11 +595,14 @@ class MasterSearchGUI:
                     self.root.update_idletasks()
                 
                 elif status_data.get('type') == 'complete':
-                    # Final update
+                    # Final update - progress bar at 100%
                     total = status_data.get('total', 0)
                     matches = status_data.get('matches', 0)
                     elapsed = status_data.get('elapsed_time', 0)
                     speed = status_data.get('speed', 0)
+                    
+                    # Set progress to 100%
+                    self.progress.set_progress(1.0)
                     
                     self.files_processed_var.set(f"📁 Files: {total:,}/{total:,}")
                     self.matches_found_var.set(f"🎯 Matches: {matches:,}")
@@ -609,7 +617,8 @@ class MasterSearchGUI:
             self.root.after(100, self.process_status_updates)
 
     def search_finished(self):
-        self.progress.stop_indeterminate()
+        # Ensure progress bar shows 100% completion
+        self.progress.set_progress(1.0)
         self.search_btn.config(state="normal", text=i18n.tr("btn_search"))
         self.stop_btn.config(state="disabled")
         self.stop_search_flag = False

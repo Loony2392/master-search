@@ -184,11 +184,31 @@ class ModernProgressBar:
             self._draw_determinate()
     
     def _draw_determinate(self):
-        """Draw determinate progress bar."""
+        """Draw determinate progress bar - shows actual progress."""
         if self.progress > 0:
             fill_width = int(self.width * self.progress)
             
-            if self.style == "neon":
+            if self.style == "neon-pulse":
+                # Neon-pulse style for determinate: gradient fill with glow
+                # Far outer glow
+                self.canvas.create_rectangle(0, 0, fill_width, self.height,
+                                           fill=self.color, outline="", stipple="gray75")
+                
+                # Medium glow
+                self.canvas.create_rectangle(0, 0, fill_width, self.height,
+                                           fill=self.color, outline="", stipple="gray50")
+                
+                # Bright solid fill
+                self.canvas.create_rectangle(0, 0, fill_width, self.height,
+                                           fill=self.color, outline="")
+                
+                # Bright highlight at the edge
+                highlight_x = max(0, fill_width - 5)
+                if highlight_x < self.width:
+                    self.canvas.create_rectangle(highlight_x, 0, fill_width, self.height,
+                                               fill="#FFFFFF", outline="")
+                
+            elif self.style == "neon":
                 # Neon glow effect
                 self.canvas.create_rectangle(0, 0, fill_width, self.height,
                                            fill=self.color, outline="")
