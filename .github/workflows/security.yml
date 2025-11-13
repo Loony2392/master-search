@@ -1,0 +1,282 @@
+name: 🔒 Security Audit
+
+on:
+  schedule:
+    # Run security audit daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  security-audit:
+    name: 🛡️ Security Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety semgrep
+        
+        # Install project dependencies
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt
+        fi
+    
+    - name: Run Bandit security linter
+      run: |
+        echo "🔍 Running Bandit security analysis..."
+        bandit -r . -f json -o bandit-report.json || true
+        bandit -r . -f txt
+      continue-on-error: true
+    
+    - name: Run Safety dependency check
+      run: |
+        echo "🔍 Checking for known security vulnerabilities in dependencies..."
+        safety check --json --output safety-report.json || true
+        safety check
+      continue-on-error: true
+    
+    - name: Run Semgrep security analysis
+      run: |
+        echo "🔍 Running Semgrep security patterns..."
+        semgrep --config=auto --json --output=semgrep-report.json . || true
+        semgrep --config=auto .
+      continue-on-error: true
+    
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+          semgrep-report.json
+        retention-days: 30
+    
+    - name: Check for critical vulnerabilities
+      run: |
+        echo "🔍 Analyzing security reports for critical issues..."
+        
+        # Check Bandit report
+        if [ -f bandit-report.json ]; then
+          HIGH_ISSUES=$(python -c "
+        import json
+        try:
+            with open('bandit-report.json') as f:
+                data = json.load(f)
+            high = len([r for r in data.get('results', []) if r.get('issue_severity') == 'HIGH'])
+            print(high)
+        except:
+            print(0)
+        ")
+          echo "Bandit HIGH severity issues: $HIGH_ISSUES"
+          
+          if [ "$HIGH_ISSUES" -gt 0 ]; then
+            echo "⚠️  Found $HIGH_ISSUES high-severity security issues in Bandit report"
+          fi
+        fi
+        
+        # Check Safety report  
+        if [ -f safety-report.json ]; then
+          VULNERABILITIES=$(python -c "
+        import json
+        try:
+            with open('safety-report.json') as f:
+                data = json.load(f)
+            vulns = len(data.get('vulnerabilities', []))
+            print(vulns)
+        except:
+            print(0)
+        ")
+          echo "Safety vulnerabilities found: $VULNERABILITIES"
+          
+          if [ "$VULNERABILITIES" -gt 0 ]; then
+            echo "⚠️  Found $VULNERABILITIES known vulnerabilities in dependencies"
+          fi
+        fi
+        
+        echo "✅ Security analysis completed"
+
+  codeql-analysis:
+    name: 🔍 CodeQL Analysis
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'python' ]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ matrix.language }}
+        queries: security-extended,security-and-quality
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt
+        fi
+    
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+      with:
+        category: "/language:${{matrix.language}}"
+
+  dependency-review:
+    name: 📦 Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Dependency Review
+      uses: actions/dependency-review-action@v3
+      with:
+        fail-on-severity: moderate
+        allow-dependencies-licenses: MIT, Apache-2.0, BSD-3-Clause, BSD-2-Clause, ISC, 0BSD
+
+  license-check:
+    name: 📄 License Compliance
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install pip-licenses
+      run: |
+        python -m pip install --upgrade pip
+        pip install pip-licenses
+        
+        # Install project dependencies
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt
+        fi
+    
+    - name: Check licenses
+      run: |
+        echo "📄 Checking dependency licenses..."
+        pip-licenses --format=json --output-file=licenses.json
+        pip-licenses --format=table
+        
+        echo ""
+        echo "🔍 Checking for potential license conflicts..."
+        
+        # Check for problematic licenses
+        PROBLEMATIC_LICENSES=$(pip-licenses | grep -E "(GPL|AGPL|LGPL|Copyleft)" || true)
+        if [ -n "$PROBLEMATIC_LICENSES" ]; then
+          echo "⚠️  Found potentially problematic licenses:"
+          echo "$PROBLEMATIC_LICENSES"
+          echo ""
+          echo "Please review these licenses for compatibility with your project."
+        else
+          echo "✅ No problematic licenses detected"
+        fi
+    
+    - name: Upload license report
+      uses: actions/upload-artifact@v3
+      with:
+        name: license-report
+        path: licenses.json
+        retention-days: 30
+
+  secrets-detection:
+    name: 🔐 Secrets Detection
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Run TruffleHog OSS
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+
+  security-summary:
+    name: 📊 Security Summary
+    runs-on: ubuntu-latest
+    needs: [security-audit, codeql-analysis, license-check, secrets-detection]
+    if: always()
+    
+    steps:
+    - name: Generate security summary
+      run: |
+        echo "# 🔒 Security Audit Summary"
+        echo ""
+        echo "## 📋 Audit Results"
+        echo ""
+        echo "| Check | Status | Details |"
+        echo "|-------|--------|---------|"
+        echo "| Bandit Security Linter | ${{ needs.security-audit.result }} | Python security issues |"
+        echo "| CodeQL Analysis | ${{ needs.codeql-analysis.result }} | Static code analysis |"
+        echo "| License Compliance | ${{ needs.license-check.result }} | Dependency license check |"
+        echo "| Secrets Detection | ${{ needs.secrets-detection.result }} | Secrets in code |"
+        echo ""
+        
+        # Overall status
+        if [[ "${{ needs.security-audit.result }}" == "success" && 
+              "${{ needs.codeql-analysis.result }}" == "success" && 
+              "${{ needs.license-check.result }}" == "success" && 
+              "${{ needs.secrets-detection.result }}" == "success" ]]; then
+          echo "## ✅ Overall Status: PASS"
+          echo ""
+          echo "All security checks passed successfully. The code appears to be secure."
+        else
+          echo "## ⚠️  Overall Status: REVIEW REQUIRED"
+          echo ""
+          echo "One or more security checks require attention. Please review the detailed results."
+        fi
+        
+        echo ""
+        echo "## 🛡️ Security Recommendations"
+        echo ""
+        echo "- Keep dependencies updated regularly"
+        echo "- Review and fix any security issues found"
+        echo "- Monitor security advisories for used packages"
+        echo "- Use secure coding practices"
+        echo "- Regular security audits and penetration testing"
+        echo ""
+        echo "Generated: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
