@@ -6,6 +6,27 @@
 
 ---
 
+## 📥 Downloads
+
+### Windows Installer Package (Recommended)
+- **File**: `MasterSearch_v2025.11.13.zip` (27.36 MB)
+- **SHA256**: `2977dc07961bc2d6a3e9192fbc22ca0e628307c78f741d2d41b5d76c95503f19`
+- **Contents**: Standalone executables + launcher scripts
+- **No Python required!** Just extract and run.
+
+### Individual Executables
+- **GUI Application**: `MasterSearch.exe` (13.94 MB)
+  - SHA256: `a9ffd48d315b4ae873d04fa7c5ee3c375b7d736bd265744b340da5ca95ba0330`
+  
+- **CLI Application**: `MasterSearchCLI.exe` (13.90 MB)
+  - SHA256: `64c5bf79fb6aed9fe17963f4241b04e1295176f3f805758c04409c0d385b16b2`
+
+### Download Links
+- GitHub Release: https://github.com/Loony2392/master-search/releases/tag/v2025.11.13
+- Direct Download: https://github.com/Loony2392/master-search/releases/download/v2025.11.13/MasterSearch_v2025.11.13.zip
+
+---
+
 ## 🎉 What's New
 
 ### ✨ Major Improvements
