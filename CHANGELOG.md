@@ -8,6 +8,45 @@ All notable changes to Master Search are documented in this file.
 
 ---
 
+## [2025.11.13] - November 13, 2025
+
+### ✨ RELEASE & CLEANUP - PRODUCTION READY
+
+#### 🧹 Root Directory Cleanup
+- **Removed duplicate** `file_search_tool.py` from root directory
+- **Consolidated modules** - all core modules now properly in `src/` folder
+- **Eliminated technical debt** - namespace and import clarity
+
+#### 🔄 PyInstaller Migration Complete
+- **Successfully migrated** from cx_Freeze (DLL path issues on OneDrive)
+- **Updated dependencies** - `requirements-dev.txt` now uses PyInstaller >= 6.1.0
+- **Clean executables** - both GUI and CLI built with PyInstaller 6.16.0
+- **No DLL conflicts** - runs cleanly on OneDrive paths with spaces
+
+#### 🎯 Build System Enhancements
+- **Unified launcher** - single `build.py` for all targets (gui/cli/all/clean)
+- **Reliable specs** - clean PyInstaller specs in `scripts/gui.spec` and `scripts/cli.spec`
+- **Production-ready** - verified builds for both executables
+
+#### ✅ Release Verification
+- ✅ Version bumped to 2025.11.13
+- ✅ All translations complete (3 languages)
+- ✅ Category filters fully functional
+- ✅ Stats display accurate and filtered
+- ✅ Release Notes displaying correctly
+- ✅ Both executables generated successfully
+  - `dist/MasterSearch.exe` (13.94 MB)
+  - `dist/MasterSearchCLI.exe` (13.9 MB)
+
+#### 🔧 Technical Details
+- **Python**: 3.11.9
+- **Build Tool**: PyInstaller 6.16.0
+- **GUI Framework**: Tkinter
+- **Localization**: JSON-based (de.json, en.json, fr.json)
+- **Code Quality**: Zero duplicate code, clean imports
+
+---
+
 ## [2025.11.10] - November 13, 2025
 
 ### ✨ COMPLETE GERMAN LOCALIZATION - MAJOR UPDATE

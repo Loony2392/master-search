@@ -32,16 +32,23 @@ from queue import Queue
 # Add config directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config'))
 
-from file_search_tool import FileSearchTool, DEFAULT_REPORT_DIR
-from report_generator import HTMLReportGenerator
+from .file_search_tool import FileSearchTool, DEFAULT_REPORT_DIR
+from .report_generator import HTMLReportGenerator
+# Note: performance_config is in config/, not src/
+# Import it via sys.path manipulation
+import sys
+import os
+config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config')
+if config_path not in sys.path:
+    sys.path.insert(0, config_path)
 from performance_config import (
     AUTO_WORKER_COUNT,
     MANUAL_WORKER_COUNT,
 )
-from settings_manager import get_settings_manager
-import i18n
-from platform_utils import PlatformUtils, get_temp_dir, open_folder
-from loading_animations import ModernProgressBar, HorizontalPulseLoader, show_loading
+from .settings_manager import get_settings_manager
+from . import i18n
+from .platform_utils import PlatformUtils, get_temp_dir, open_folder
+from .loading_animations import ModernProgressBar, HorizontalPulseLoader, show_loading
 
 # Create a simple config dict for compatibility
 PERFORMANCE_CONFIG = {
@@ -125,7 +132,7 @@ class MasterSearchGUI:
             'sqlite': 'data', 'yaml': 'data', 'yml': 'data',
             
             # Logs
-            'log': 'logs', 'txt': 'logs',
+            'log': 'logs',
             
             # Config
             'cfg': 'config', 'conf': 'config', 'config': 'config', 'ini': 'config', 'toml': 'config',
@@ -133,13 +140,14 @@ class MasterSearchGUI:
             
             # Web (includes documentation markup)
             'html': 'web', 'htm': 'web', 'css': 'web', 'scss': 'web', 'sass': 'web', 'less': 'web',
-            'vue': 'web', 'svelte': 'web', 'md': 'web', 'rst': 'web', 'edcx': 'web',
+            'vue': 'web', 'svelte': 'web', 'md': 'web', 'rst': 'web', 'edcx': 'web', 'txt': 'web',
         }
         
         # Real-time status display variables (initialized later in setup_ui)
         self.files_processed_var = None
         self.matches_found_var = None
         self.scan_speed_var = None
+        self.excluded_files_var = None
         
         # Queue for real-time status updates from search thread
         self.status_queue = Queue()
@@ -281,10 +289,12 @@ class MasterSearchGUI:
 
         self.files_processed_var = tk.StringVar(value="Files: 0/0")
         self.matches_found_var = tk.StringVar(value="Matches: 0")
+        self.excluded_files_var = tk.StringVar(value="")
         self.scan_speed_var = tk.StringVar(value="Speed: 0 files/sec")
 
         ttk.Label(stats_frame, textvariable=self.files_processed_var, font=("Segoe UI", 9), foreground="blue").grid(row=0, column=0, sticky="w", padx=5)
         ttk.Label(stats_frame, textvariable=self.matches_found_var, font=("Segoe UI", 9), foreground="green").grid(row=0, column=2, sticky="w", padx=5)
+        ttk.Label(stats_frame, textvariable=self.excluded_files_var, font=("Segoe UI", 9), foreground="red").grid(row=0, column=3, sticky="w", padx=5)
         ttk.Label(stats_frame, textvariable=self.scan_speed_var, font=("Segoe UI", 9), foreground="orange").grid(row=0, column=4, sticky="w", padx=5)
 
         self.log_text = scrolledtext.ScrolledText(log_frame, height=8, font=("Consolas", 9), wrap=tk.WORD)
@@ -314,10 +324,6 @@ class MasterSearchGUI:
         # Get the category for this file extension
         file_category = self.CATEGORY_MAPPING.get(file_ext, None)
         
-        # If extension is not in mapping, include it anyway (for unknown types)
-        if file_category is None:
-            return True
-        
         # Check if selected categories include this file's category
         category_selected = {
             'code': self.category_code.get(),
@@ -327,6 +333,10 @@ class MasterSearchGUI:
             'config': self.category_config.get(),
             'web': self.category_web.get(),
         }
+        
+        # If extension is not in mapping, exclude it (only include known types)
+        if file_category is None:
+            return False
         
         return category_selected.get(file_category, False)
 
@@ -380,6 +390,13 @@ class MasterSearchGUI:
         self.stop_btn.config(state="normal")
         self.progress.start_indeterminate()
         self.log_text.delete(1.0, tk.END)
+        
+        # Reset stats
+        self.files_processed_var.set("📁 Files: 0/0")
+        self.matches_found_var.set("🎯 Matches: 0")
+        self.excluded_files_var.set("")
+        self.scan_speed_var.set("⚡ Progress: 0%")
+        
         # Clear previous results
         self.last_report_path = None
         self.report_btn.config(state="disabled")
@@ -460,15 +477,25 @@ class MasterSearchGUI:
             results = search_tool.results
             
             # Filter results by selected file categories
+            excluded_count = 0
             if results:
                 before_filter = len(results)
                 results = [
                     result for result in results 
-                    if self.is_file_in_selected_categories(result.get('file_path', ''))
+                    if self.is_file_in_selected_categories(result.get('path', ''))
                 ]
                 after_filter = len(results)
-                if before_filter != after_filter:
+                excluded_count = before_filter - after_filter
+                if excluded_count > 0:
                     self.log(f"📁 Filtered by categories: {before_filter} → {after_filter} results")
+                    self.log(f"   🚫 Außerhalb des Filters: {excluded_count} Dateien")
+                
+                # Count filtered matches
+                filtered_matches = sum(len(result.get('matches', [])) for result in results)
+                self.matches_found_var.set(f"🎯 Matches: {filtered_matches:,}")
+                self.files_processed_var.set(f"📁 Files: {after_filter:,}")
+                if excluded_count > 0:
+                    self.excluded_files_var.set(f"🚫 {excluded_count:,} ausgeschlossen")
             
             # Check if user stopped the search
             if self.stop_search_flag:
@@ -618,12 +645,12 @@ class MasterSearchGUI:
         try:
             from version import VERSION
             
-            # Prüfe ob neue Version vorhanden ist (Check gegen letzte gezeigte Version)
+            # Prüfe ob diese Version bereits gezeigt wurde
             settings_mgr = get_settings_manager()
-            last_version = settings_mgr.get("last_shown_version", "0.0.0")
+            last_version = settings_mgr.get("last_shown_version", "")
             
-            # Zeige nur wenn neue Version seit letztem Start
-            if VERSION > last_version:
+            # Zeige Release Notes wenn noch nicht gezeigt
+            if VERSION != last_version:
                 # Erstelle eigenständiges Release Notes Fenster
                 notes_window = tk.Toplevel(self.root)
                 notes_window.title(f"🆕 Master Search v{VERSION} - Release Notes")

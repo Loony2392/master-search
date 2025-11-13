@@ -13,42 +13,73 @@ Email: info@loony-tech.de
 import sys
 import os
 from pathlib import Path
+
 from cx_Freeze import setup, Executable
+
+# WORKAROUND: Suppress cx_Freeze's DLL directory errors
+# Patch ctypes.windll.kernel32.SetDllDirectory to not fail on permission errors
+if sys.platform == 'win32':
+    try:
+        import ctypes
+        original_set_dll = ctypes.windll.kernel32.SetDllDirectory
+        def safe_set_dll_directory(path):
+            try:
+                return original_set_dll(path)
+            except Exception:
+                # Silently ignore DLL directory errors
+                return 1  # Return success anyway
+        ctypes.windll.kernel32.SetDllDirectory = safe_set_dll_directory
+    except Exception:
+        pass
+
+# Add parent directory to sys.path to import version
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 from version import VERSION
+
+# Change to project root for cx_Freeze build
+os.chdir(str(project_root))
+
+# Get Python installation directory for tkinter DLLs
+# sys.executable = C:\Users\...\Python311\python.exe
+# So parent = C:\Users\...\Python311\
+python_base = os.path.dirname(sys.executable)  # C:\Users\...\Python311\
+python_dlls = os.path.join(python_base, 'DLLs')  # C:\Users\...\Python311\DLLs\
+python_tcltk = os.path.join(python_base, 'tcl')  # C:\Users\...\Python311\tcl\
 
 # Build-Optionen
 build_options = {
     'packages': [
         'os', 'sys', 're', 'html', 'pathlib', 'datetime', 'mimetypes', 'time', 
         'multiprocessing', 'concurrent.futures', 'threading', 'queue', 'subprocess',
-        'tkinter', 'tkinter.ttk', 'tkinter.filedialog', 'tkinter.messagebox',
-        'tkinter.scrolledtext', 'webbrowser', 'urllib', 'urllib.parse'
+        'ctypes', 'ctypes.util', 'tkinter', 'tkinter.ttk', 'tkinter.font', 'tkinter.messagebox'
     ],
-    'includes': ['colorama', 'psutil'],
+    'includes': [
+        'colorama', 'psutil', 'tkinter',
+        # Explicitly include config and src as packages
+        'config', 'config.language_config', 'config.performance_config',
+        'src', 'src.file_search_tool', 'src.gui_search_tool', 'src.loading_animations',
+        'src.i18n', 'src.report_generator', 'src.update_notifier', 'src.settings_manager',
+        'src.platform_utils'
+    ],
     'excludes': [
         'unittest', 'pydoc', 'doctest', 'test', 'distutils',
         'email', 'http', 'xml', 'pdb', 'sqlite3', 'socketserver'
     ],
     'include_files': [
-        ('README.md', 'README.md'),
-        ('requirements.txt', 'requirements.txt'),
-        ('requirements-minimal.txt', 'requirements-minimal.txt'),
-        ('version.py', 'version.py'),
-        ('performance_config.py', 'performance_config.py'),
-        ('gui_search_tool.py', 'gui_search_tool.py'),
-        ('file_search_tool.py', 'file_search_tool.py'),
-        ('report_generator.py', 'report_generator.py'),
-        ('i18n.py', 'i18n.py'),
-        ('language_config.py', 'language_config.py'),
-        ('update_notifier.py', 'update_notifier.py'),
-        ('gui_main.py', 'gui_main.py'),
-        ('cli_main.py', 'cli_main.py'),
-        ('media/master_search_icon.ico', 'media/master_search_icon.ico'),
-        ('media/loony_tech_logo.ico', 'media/loony_tech_logo.ico'),
-        ('locales', 'locales'),  # Include translation files
+        ('config', 'config'),      # Config module (language_config, performance_config)
+        ('src', 'src'),            # Source modules
+        ('locales', 'locales'),    # Translation files
+        ('media', 'media'),        # Icons and images
+        (str(project_root / 'init_dll_path.py'), 'init_dll_path.py'),  # DLL initialization
+        # Include complete Python DLLs directory (contains tkinter DLLs)
+        (python_dlls, 'lib/DLLs'),
+        # Include tcl/tk library files
+        (python_tcltk, 'tcl'),
     ],
-    'zip_include_packages': ['encodings', 'importlib', 'collections'],
-    'optimize': 2,
+    'zip_include_packages': [],  # Don't zip packages - include them as directories
+    'zip_exclude_packages': '*',  # Exclude everything from zip
+    'optimize': 0,  # Don't optimize - keep source as-is for debugging and proper imports
 }
 
 # MSI-Optionen
@@ -99,8 +130,8 @@ bdist_msi_options['data'] = msi_data
 
 # Basis für Executable bestimmen
 if sys.platform == "win32":
-    base_gui = "Win32GUI"  # GUI-Anwendung ohne Konsole
-    base_console = None    # Console-Anwendung
+    base_gui = "Win32GUI"  # GUI application without console window
+    base_console = None    # Console application
 else:
     base_gui = None
     base_console = None

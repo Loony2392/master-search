@@ -50,17 +50,43 @@ def main():
     try:
         logging.info("Starting Master Search GUI...")
         
-        # Add current directory and src/config to path for imports
-        app_dir = os.path.dirname(os.path.abspath(__file__))
-        sys.path.insert(0, app_dir)
-        sys.path.insert(0, os.path.join(app_dir, 'src'))
-        sys.path.insert(0, os.path.join(app_dir, 'config'))
-        logging.info(f"Application directory: {app_dir}")
+        # Setup paths for imports - handle both frozen and dev mode
+        if getattr(sys, 'frozen', False):
+            # In cx_Freeze bundle, app_dir is the executable directory
+            app_dir = os.path.dirname(sys.executable)
+            logging.info("Running in frozen mode (cx_Freeze bundle)")
+            logging.info(f"Executable directory: {app_dir}")
+        else:
+            # In development, use script directory
+            app_dir = os.path.dirname(os.path.abspath(__file__))
+            logging.info("Running in development mode")
+            logging.info(f"Script directory: {app_dir}")
+        
+        # Add app directory to path for imports (root level imports)
+        if app_dir not in sys.path:
+            sys.path.insert(0, app_dir)
+        
+        logging.info(f"sys.path (first 5): {sys.path[:5]}")
+        logging.info("=" * 60)
         
         # Import language config and i18n
         logging.info("Importing language configuration...")
-        from language_config import get_active_language, show_language_dialog, get_saved_language
-        import i18n
+        try:
+            from config.language_config import get_active_language, show_language_dialog, get_saved_language
+            logging.info("✓ Successfully imported from config.language_config")
+        except ImportError as e:
+            logging.error(f"✗ Failed to import language_config: {e}")
+            logging.error(f"  app_dir={app_dir}")
+            logging.error(f"  config dir exists: {os.path.exists(os.path.join(app_dir, 'config'))}")
+            raise
+        
+        try:
+            from src.i18n import set_locale
+            logging.info("✓ Successfully imported src.i18n")
+        except ImportError as e:
+            logging.error(f"✗ Failed to import src.i18n: {e}")
+            logging.error(f"  src dir exists: {os.path.exists(os.path.join(app_dir, 'src'))}")
+            raise
         
         # Check if language is already configured
         saved_lang = get_saved_language()
@@ -71,26 +97,32 @@ def main():
             logging.info("First run - showing language selection dialog...")
             selected_lang = show_language_dialog()
             logging.info(f"User selected language: {selected_lang}")
-            i18n.set_locale(selected_lang)
+            set_locale(selected_lang)
         else:
             # Use saved language
             logging.info(f"Using saved language: {saved_lang}")
-            i18n.set_locale(saved_lang)
+            set_locale(saved_lang)
         
         # Import and run GUI
         logging.info("Importing GUI module...")
-        from gui_search_tool import MasterSearchGUI
+        try:
+            from src.gui_search_tool import MasterSearchGUI
+            logging.info("✓ Successfully imported MasterSearchGUI")
+        except ImportError as e:
+            logging.error(f"✗ Failed to import MasterSearchGUI: {e}")
+            raise
         
         logging.info("Creating GUI instance...")
         app = MasterSearchGUI()
 
         # Show update notification once per version (GUI dialog if possible)
         try:
-            from update_notifier import check_and_show_update
+            from src.update_notifier import check_and_show_update
             try:
                 # Pass the main window so the dialog is modal to the app
                 check_and_show_update(app.root)
-            except Exception:
+            except Exception as e:
+                logging.debug(f"GUI update dialog failed: {e}, trying console notification")
                 # If GUI dialog fails for any reason, fall back to console notification
                 check_and_show_update(None)
         except Exception as e:

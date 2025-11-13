@@ -45,10 +45,10 @@ try:
     else:
         LOCALES_DIR = Path.cwd() / "locales"
         
-    print(f"🌍 Using locales directory: {LOCALES_DIR}")
+    print(f"[i18n] Using locales directory: {LOCALES_DIR}")
     
 except Exception as e:
-    print(f"⚠️  Error determining locales directory: {e}")
+    print(f"[WARNING] Error determining locales directory: {e}")
     LOCALES_DIR = Path.cwd() / "locales"
 
 

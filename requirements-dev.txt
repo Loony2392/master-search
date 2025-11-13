@@ -39,10 +39,10 @@ setuptools>=68.0.0             # Package setup
 wheel>=0.41.0                  # Wheel format
 twine>=4.0.0                   # PyPI upload
 
-# MSI Build Tools
-# ---------------
-cx_Freeze>=6.15.0              # MSI package creation
-pywin32>=306                   # Windows integration (required for MSI)
+# Build Tools for Executable Creation
+# -----------------------------------
+PyInstaller>=6.1.0             # Create standalone executables
+pywin32>=306                   # Windows integration (for future MSI with Inno Setup)
 
 # Development Utilities
 # ---------------------

@@ -47,7 +47,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 # Import version and internationalization
 try:
     from version import VERSION, AUTHOR, EMAIL, COMPANY
-    from platform_utils import PlatformUtils, get_temp_dir, open_file
+    from .platform_utils import PlatformUtils, get_temp_dir, open_file
 except ImportError:
     # Fallback if imports fail
     VERSION = "2025.11.9"
@@ -67,7 +67,7 @@ except ImportError:
 
 # Try to import i18n, with fallback implementation
 try:
-    from i18n import tr, _CURRENT_LANG
+    from .i18n import tr, _CURRENT_LANG
     _I18N_AVAILABLE = True
 except ImportError:
     _I18N_AVAILABLE = False

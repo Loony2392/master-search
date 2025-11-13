@@ -31,6 +31,12 @@ DEFAULT_SETTINGS = {
     "file_pattern": "*",
     "window_width": 900,
     "window_height": 700,
+    "category_code": True,
+    "category_documents": True,
+    "category_data": True,
+    "category_logs": True,
+    "category_config": True,
+    "category_web": True,
 }
 
 

@@ -10,8 +10,8 @@ Email: info@loony-tech.de
 """
 
 # VERSION INFORMATION - Update only here!
-__version__ = "2025.11.11"
-VERSION = "2025.11.11"  # Legacy compatibility
+__version__ = "2025.11.13"
+VERSION = "2025.11.13"  # Legacy compatibility
 AUTHOR = "Loony2392"
 EMAIL = "info@loony-tech.de"
 COMPANY = "LOONY-TECH"

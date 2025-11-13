@@ -145,7 +145,7 @@ sys.path.insert(0, 'src')
 sys.path.insert(0, 'config')
 
 # App configuration
-APP = ['src/gui_main.py']
+APP = ['gui_main.py']
 DATA_FILES = [
     ('locales', ['locales/de.json', 'locales/en.json', 'locales/fr.json']),
     ('', ['README.md']),
@@ -155,9 +155,9 @@ OPTIONS = {{
     'argv_emulation': True,
     'packages': ['tkinter', 'pathlib', 'json', 'datetime', 'threading', 
                 'concurrent', 'queue', 'multiprocessing'],
-    'includes': ['platform_utils', 'file_search_tool', 'report_generator',
+    'includes': ['gui_search_tool', 'platform_utils', 'file_search_tool', 'report_generator',
                 'settings_manager', 'update_notifier', 'i18n', 'version',
-                'language_config', 'performance_config'],
+                'language_config', 'performance_config', 'loading_animations'],
     'excludes': ['PyQt4', 'PyQt5', 'matplotlib', 'numpy', 'scipy'],
     'resources': ['locales/', 'media/'],
     'plist': {{
@@ -219,20 +219,19 @@ setup(
         """Build the macOS App Bundle."""
         print("\n🏗️  Building macOS App Bundle...")
         
-        # Change to project root
-        original_cwd = Path.cwd()
-        os.chdir(self.project_root)
-        
         try:
-            # Run py2app
-            cmd = [sys.executable, 'setup_dmg.py', 'py2app']
+            # Run py2app from project root with cwd parameter
+            cmd = [sys.executable, str(self.project_root / 'setup_dmg.py'), 'py2app']
+            
             print(f"Running: {' '.join(cmd)}")
+            print(f"Working directory: {self.project_root}")
             
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                check=False
+                check=False,
+                cwd=str(self.project_root)
             )
             
             if result.returncode != 0:
@@ -252,8 +251,9 @@ setup(
                 print(f"❌ App Bundle not found at expected location: {app_path}")
                 return False
             
-        finally:
-            os.chdir(original_cwd)
+        except Exception as e:
+            print(f"❌ Error building app bundle: {e}")
+            return False
     
     def create_dmg_structure(self, app_path):
         """Create DMG directory structure."""

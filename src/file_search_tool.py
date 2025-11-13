@@ -45,8 +45,8 @@ from queue import Queue
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from version import VERSION, AUTHOR, EMAIL, COMPANY
-from report_generator import HTMLReportGenerator
-from platform_utils import PlatformUtils, get_temp_dir, open_file
+from .report_generator import HTMLReportGenerator
+from .platform_utils import PlatformUtils, get_temp_dir, open_file
 
 # Cross-platform default report directory
 DEFAULT_REPORT_DIR = get_temp_dir()

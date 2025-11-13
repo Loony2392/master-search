@@ -1,0 +1,45 @@
+C:\Users\b.kolb\OneDrive - TSL-Escha GmbH\Code\Master Search\build\EXEWIN~1.11\MasterSearch.exe - Zugriff verweigert
+C:\Users\b.kolb\OneDrive - TSL-Escha GmbH\Code\Master Search\build\EXEWIN~1.11\python311.dll - Zugriff verweigert
+C:\Users\b.kolb\OneDrive - TSL-Escha GmbH\Code\Master Search\build\EXEWIN~1.11 - Der Prozess kann nicht auf die Datei zugreifen, da sie von einem anderen Prozess verwendet wird.
+running build
+running build_exe
+error: the build_exe directory cannot be cleaned
+running bdist_msi
+running build
+running build_exe
+error: the build_exe directory cannot be cleaned
+
+============================================================
+[BUILD] MASTER SEARCH - MSI BUILDER
+============================================================
+[*] Automated MSI Creation Tool
+[*] Author: Loony2392 - LOONY-TECH
+
+[*] Checking system requirements...
+[OK] Python Version: 3.11.9
+[OK] Windows system detected
+
+[*] Installing build dependencies...
+[OK] psutil already installed
+[*] Installing cx_Freeze>=6.15.0...
+[OK] cx_Freeze>=6.15.0 successfully installed
+[*] Installing colorama>=0.4.6...
+[OK] colorama>=0.4.6 successfully installed
+
+[*] Cleaning build directories...
+[WARN] Permission denied cleaning build - trying alternative...
+[OK] build cleaned (via cmd)
+
+[*] Creating executable file...
+[OK] Executable file created
+
+[*] Creating MSI installer...
+[OK] MSI file created
+
+============================================================
+[SUCCESS] BUILD COMPLETED SUCCESSFULLY
+============================================================
+
+[*] Additionally: 1 EXE file(s) created
+
+[SUCCESS] MSI build completed successfully!

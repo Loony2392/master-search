@@ -28,7 +28,8 @@ if sys.platform == 'win32':
 
 class MSIBuilder:
     def __init__(self):
-        self.project_root = Path(__file__).parent
+        # Project root is one level up from scripts/
+        self.project_root = Path(__file__).parent.parent
         self.dist_folder = self.project_root / 'dist'
         self.build_folder = self.project_root / 'build'
         
@@ -126,12 +127,14 @@ class MSIBuilder:
         self.print_colored('Creating executable file...', '[*]')
         
         try:
-            subprocess.check_call([
-                sys.executable, 'setup_msi.py', 'build'
-            ])
+            # Run setup_msi.py from project root with explicit cwd
+            subprocess.call(
+                [sys.executable, str(self.project_root / 'scripts' / 'setup_msi.py'), 'build'],
+                cwd=str(self.project_root)
+            )
             self.print_colored('Executable file created', '[OK]')
             return True
-        except subprocess.CalledProcessError as e:
+        except Exception as e:
             self.print_colored(f'Error creating EXE: {e}', '[ERROR]')
             return False
     
@@ -140,12 +143,14 @@ class MSIBuilder:
         self.print_colored('Creating MSI installer...', '[*]')
         
         try:
-            subprocess.check_call([
-                sys.executable, 'setup_msi.py', 'bdist_msi'
-            ])
+            # Run setup_msi.py from project root with explicit cwd
+            subprocess.call(
+                [sys.executable, str(self.project_root / 'scripts' / 'setup_msi.py'), 'bdist_msi'],
+                cwd=str(self.project_root)
+            )
             self.print_colored('MSI file created', '[OK]')
             return True
-        except subprocess.CalledProcessError as e:
+        except Exception as e:
             self.print_colored(f'Error creating MSI: {e}', '[ERROR]')
             return False
     
@@ -156,8 +161,8 @@ class MSIBuilder:
         self.print_separator('=')
         
         # Find MSI files
-        msi_files = list(self.dist_folder.glob('*.msi'))
-        exe_files = list(Path('build').rglob('*.exe'))
+        msi_files = list(self.project_root.glob('dist/*.msi'))
+        exe_files = list((self.project_root / 'build').rglob('*.exe'))
         
         if msi_files:
             msi_file = msi_files[0]
@@ -240,7 +245,7 @@ def main():
             builder.print_colored('MSI build completed successfully!', '[SUCCESS]')
             
             # Optional: Open MSI file
-            msi_files = list(Path('dist').glob('*.msi'))
+            msi_files = list(builder.project_root.glob('dist/*.msi'))
             if msi_files:
                 try:
                     os.startfile(str(msi_files[0].parent))

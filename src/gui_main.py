@@ -60,7 +60,7 @@ def main():
         
         # Import and start GUI
         print("🎨 Starting Master Search GUI...")
-        from gui_search_tool import MasterSearchGUI
+        from .gui_search_tool import MasterSearchGUI
         
         # Create and run the application
         app = MasterSearchGUI()

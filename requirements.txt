@@ -12,6 +12,9 @@
 # Wird für die farbige Konsolen-Ausgabe verwendet
 colorama>=0.4.6
 
+# Pillow - Image processing library for GUI icons
+pillow>=9.0.0
+
 # Setup tools für Package-Installation
 setuptools>=68.0.0
 

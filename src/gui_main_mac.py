@@ -64,7 +64,7 @@ def main():
         setup_mac_environment()
         
         # Import and run the GUI
-        from gui_search_tool import MasterSearchGUI
+        from .gui_search_tool import MasterSearchGUI
         
         # Create and run the application
         app = MasterSearchGUI()
