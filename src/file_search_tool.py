@@ -832,6 +832,11 @@ class FileSearchTool:
         all_folders = []
         
         for root, dirs, files in os.walk(self.search_path):
+            # WICHTIG: Prüfe auf Stop-Flag bei jeder Iteration
+            if self.stop_requested:
+                self.print_colored('Dateisammlung abgebrochen!', 'warning', '⏹️')
+                break
+            
             # Sammle Ordner mit Multi-Term-Unterstützung
             for dir_name in dirs:
                 if self.match_text(dir_name, self.search_terms, self.search_mode, 
@@ -865,6 +870,11 @@ class FileSearchTool:
         with self.results_lock:
             self.results.extend(all_folders)
         
+        # WICHTIG: Prüfe ob Stop angefordert wurde
+        if self.stop_requested:
+            self.print_colored('Suche abgebrochen!', 'warning', '⏹️')
+            return
+        
         if total_files == 0:
             self.print_colored('Keine Dateien zu verarbeiten', 'warning', '⚠️')
             return
@@ -897,6 +907,12 @@ class FileSearchTool:
                     
                     # Sammle Ergebnisse
                     for future in as_completed(future_to_batch):
+                        # WICHTIG: Prüfe auf Stop-Flag zwischen Batches
+                        if self.stop_requested:
+                            self.print_colored('Batch-Verarbeitung abgebrochen!', 'warning', '⏹️')
+                            executor.shutdown(wait=False)
+                            break
+                        
                         try:
                             batch_results = future.result()
                             file_results.extend(batch_results)
