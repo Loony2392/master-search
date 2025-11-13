@@ -310,7 +310,7 @@ setup(
     options={
         "bdist_msi": {
             "add_to_path": True,
-            "upgrade_code": "{12345678-1234-1234-1234-123456789012}",
+            "upgrade_code": "{3F692526-948B-4B39-BF5F-1C3FD99FC7F4}",
             "initial_target_dir": "[ProgramFilesFolder]\\\\Master Search",
         }
     }
