@@ -32,11 +32,19 @@ DEFAULT_SETTINGS = {
     "window_width": 900,
     "window_height": 700,
     "category_code": True,
+    "category_markup": True,
     "category_documents": True,
+    "category_spreadsheets": True,
+    "category_presentations": True,
     "category_data": True,
+    "category_databases": True,
     "category_logs": True,
     "category_config": True,
     "category_web": True,
+    "category_media": True,
+    "category_archives": True,
+    "category_fonts": True,
+    "category_text": True,
 }
 
 

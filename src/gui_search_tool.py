@@ -108,39 +108,264 @@ class MasterSearchGUI:
         
         # Category selections for file filtering
         self.category_code = tk.BooleanVar(value=settings_mgr.get("category_code", True))
+        self.category_markup = tk.BooleanVar(value=settings_mgr.get("category_markup", True))
         self.category_documents = tk.BooleanVar(value=settings_mgr.get("category_documents", True))
+        self.category_spreadsheets = tk.BooleanVar(value=settings_mgr.get("category_spreadsheets", True))
+        self.category_presentations = tk.BooleanVar(value=settings_mgr.get("category_presentations", True))
         self.category_data = tk.BooleanVar(value=settings_mgr.get("category_data", True))
+        self.category_databases = tk.BooleanVar(value=settings_mgr.get("category_databases", True))
         self.category_logs = tk.BooleanVar(value=settings_mgr.get("category_logs", True))
         self.category_config = tk.BooleanVar(value=settings_mgr.get("category_config", True))
         self.category_web = tk.BooleanVar(value=settings_mgr.get("category_web", True))
+        self.category_media = tk.BooleanVar(value=settings_mgr.get("category_media", True))
+        self.category_archives = tk.BooleanVar(value=settings_mgr.get("category_archives", True))
+        self.category_fonts = tk.BooleanVar(value=settings_mgr.get("category_fonts", True))
+        self.category_text = tk.BooleanVar(value=settings_mgr.get("category_text", True))
         
-        # File extension to category mapping
+        # File extension to category mapping - Comprehensive
         self.CATEGORY_MAPPING = {
-            # Code
-            'py': 'code', 'java': 'code', 'js': 'code', 'jsx': 'code', 'ts': 'code', 'tsx': 'code',
-            'cpp': 'code', 'c': 'code', 'h': 'code', 'hpp': 'code', 'cs': 'code', 'swift': 'code',
-            'go': 'code', 'rs': 'code', 'rb': 'code', 'php': 'code', 'scala': 'code',
-            'kt': 'code', 'sh': 'code', 'bash': 'code', 'ps1': 'code', 'bat': 'code',
+            # Programming Languages & Scripts
+            'py': 'code', 'pyc': 'code', 'pyo': 'code', 'pyd': 'code',
+            'java': 'code', 'class': 'code', 'jar': 'code',
+            'js': 'code', 'jsx': 'code', 'mjs': 'code', 'cjs': 'code',
+            'ts': 'code', 'tsx': 'code',
+            'cpp': 'code', 'cc': 'code', 'cxx': 'code', 'c': 'code', 'h': 'code', 'hpp': 'code', 'hxx': 'code', 'hh': 'code',
+            'cs': 'code', 'csproj': 'code',
+            'swift': 'code', 'swiftpm': 'code',
+            'go': 'code',
+            'rs': 'code', 'rlib': 'code',
+            'rb': 'code', 'rbw': 'code', 'rake': 'code', 'gemspec': 'code',
+            'php': 'code', 'php3': 'code', 'php4': 'code', 'php5': 'code', 'php7': 'code', 'php8': 'code', 'phtml': 'code',
+            'scala': 'code', 'sc': 'code',
+            'kt': 'code', 'kts': 'code',
+            'sh': 'code', 'bash': 'code', 'zsh': 'code', 'fish': 'code', 'ksh': 'code',
+            'ps1': 'code', 'psm1': 'code', 'psd1': 'code',
+            'bat': 'code', 'cmd': 'code', 'com': 'code',
+            'pl': 'code', 'pm': 'code',
+            'lua': 'code',
+            'r': 'code', 'rmd': 'code', 'rnotebook': 'code',
+            'jl': 'code',
+            'dart': 'code',
+            'elm': 'code',
+            'clj': 'code', 'cljs': 'code', 'cljc': 'code', 'edn': 'code',
+            'ex': 'code', 'exs': 'code',
+            'erl': 'code', 'hrl': 'code',
+            'hs': 'code', 'lhs': 'code',
+            'ml': 'code', 'mli': 'code',
+            'fs': 'code', 'fsi': 'code', 'fsx': 'code',
+            'pas': 'code', 'pp': 'code',
+            'asm': 'code', 's': 'code',
+            'vb': 'code', 'vbs': 'code', 'vbproj': 'code',
+            'groovy': 'code', 'gradle': 'code',
+            'maven': 'code', 'pom': 'code',
+            'makefile': 'code', 'make': 'code',
+            'ninja': 'code',
+            'cmake': 'code',
+            'sbt': 'code',
+            'cargo': 'code',
+            'cabal': 'code',
+            'stack': 'code',
             
-            # Documents
-            'pdf': 'documents', 'docx': 'documents', 'doc': 'documents', 'xlsx': 'documents',
-            'xls': 'documents', 'pptx': 'documents', 'ppt': 'documents', 'odt': 'documents',
+            # Markup & Documentation
+            'md': 'markup', 'markdown': 'markup',
+            'rst': 'markup', 'rest': 'markup',
+            'adoc': 'markup', 'asciidoc': 'markup',
+            'textile': 'markup',
+            'rdoc': 'markup',
+            'org': 'markup',
+            'wiki': 'markup',
+            'mediawiki': 'markup',
+            'mdown': 'markup',
+            'mkd': 'markup',
+            'tex': 'markup', 'latex': 'markup',
+            
+            # Documents - Office & Publishing
+            'pdf': 'documents', 'doc': 'documents', 'docx': 'documents', 'docm': 'documents',
+            'odt': 'documents', 'ott': 'documents',
             'rtf': 'documents',
+            'pages': 'documents',
+            'txt': 'documents', 'text': 'documents',
+            'wps': 'documents',
+            'wpd': 'documents',
             
-            # Data
-            'csv': 'data', 'json': 'data', 'xml': 'data', 'sql': 'data', 'db': 'data',
-            'sqlite': 'data', 'yaml': 'data', 'yml': 'data',
+            # Spreadsheets
+            'xls': 'spreadsheets', 'xlsx': 'spreadsheets', 'xlsm': 'spreadsheets', 'xlt': 'spreadsheets',
+            'ods': 'spreadsheets', 'ots': 'spreadsheets',
+            'csv': 'spreadsheets', 'tsv': 'spreadsheets', 'dsv': 'spreadsheets',
+            'numbers': 'spreadsheets',
+            'gnumeric': 'spreadsheets',
+            'xlam': 'spreadsheets', 'xltx': 'spreadsheets', 'xltm': 'spreadsheets',
             
-            # Logs
-            'log': 'logs',
+            # Presentations
+            'ppt': 'presentations', 'pptx': 'presentations', 'pptm': 'presentations', 'potx': 'presentations',
+            'odp': 'presentations', 'otp': 'presentations',
+            'key': 'presentations',
+            'gslides': 'presentations',
+            'pps': 'presentations', 'ppsx': 'presentations',
             
-            # Config
-            'cfg': 'config', 'conf': 'config', 'config': 'config', 'ini': 'config', 'toml': 'config',
-            'properties': 'config', 'env': 'config',
+            # Data Formats
+            'json': 'data', 'jsonl': 'data', 'ndjson': 'data',
+            'xml': 'data', 'xsd': 'data', 'xsl': 'data', 'xslt': 'data',
+            'yaml': 'data', 'yml': 'data',
+            'toml': 'data',
+            'protobuf': 'data', 'proto': 'data',
+            'avro': 'data',
+            'msgpack': 'data',
+            'cbor': 'data',
+            'bson': 'data',
+            'ion': 'data',
+            'edn': 'data',
+            's_expr': 'data',
             
-            # Web (includes documentation markup)
-            'html': 'web', 'htm': 'web', 'css': 'web', 'scss': 'web', 'sass': 'web', 'less': 'web',
-            'vue': 'web', 'svelte': 'web', 'md': 'web', 'rst': 'web', 'edcx': 'web', 'txt': 'web',
+            # Databases
+            'sql': 'databases', 'sqlite': 'databases', 'db': 'databases', 'mdb': 'databases',
+            'dbf': 'databases', 'dbc': 'databases',
+            'accdb': 'databases', 'laccdb': 'databases',
+            'mysql': 'databases', 'postgresql': 'databases', 'mongo': 'databases',
+            'ibd': 'databases', 'frm': 'databases', 'myd': 'databases',
+            
+            # Logs & System
+            'log': 'logs', 'logs': 'logs',
+            'trace': 'logs', 'debug': 'logs',
+            'out': 'logs',
+            '1': 'logs', '2': 'logs',
+            'syslog': 'logs',
+            
+            # Configuration Files
+            'conf': 'config', 'config': 'config', 'cfg': 'config', 'cnf': 'config',
+            'ini': 'config', 'inf': 'config',
+            'env': 'config', 'envrc': 'config',
+            'properties': 'config', 'gradle': 'config',
+            'gradle': 'config', 'maven': 'config', 'pom': 'config',
+            'cmake': 'config',
+            'dockerfile': 'config', 'docker-compose': 'config',
+            'compose': 'config',
+            'kubernetes': 'config', 'k8s': 'config', 'yml': 'config', 'yaml': 'config',
+            'terraform': 'config', 'tf': 'config', 'tfvars': 'config',
+            'ansible': 'config', 'playbook': 'config',
+            'chef': 'config', 'recipe': 'config',
+            'puppet': 'config', 'pp': 'config',
+            'saltstack': 'config', 'sls': 'config',
+            'nix': 'config',
+            'vcxproj': 'config', 'csproj': 'config', 'fsproj': 'config', 'vbproj': 'config',
+            'targets': 'config', 'props': 'config',
+            'vimrc': 'config', 'vim': 'config',
+            'emacs': 'config',
+            'gitconfig': 'config', 'gitignore': 'config', 'gitattributes': 'config',
+            'editorconfig': 'config',
+            'eslintrc': 'config', 'prettierrc': 'config', 'stylelintrc': 'config',
+            'npmrc': 'config', 'yarnrc': 'config', 'bowerrc': 'config',
+            'htaccess': 'config',
+            'nginx': 'config', 'apache': 'config',
+            'httpd': 'config',
+            'bash_profile': 'config', 'bashrc': 'config', 'profile': 'config',
+            'zshrc': 'config', 'zsh_profile': 'config',
+            'fishrc': 'config',
+            'screenrc': 'config', 'tmuxconf': 'config',
+            
+            # Web
+            'html': 'web', 'htm': 'web', 'xhtml': 'web',
+            'css': 'web', 'scss': 'web', 'sass': 'web', 'less': 'web',
+            'vue': 'web', 'svelte': 'web', 'astro': 'web', 'qvp': 'web',
+            'jsx': 'web', 'tsx': 'web',
+            'pug': 'web', 'jade': 'web',
+            'handlebars': 'web', 'hbs': 'web',
+            'ejs': 'web', 'erb': 'web',
+            'haml': 'web',
+            'slim': 'web',
+            'blade': 'web',
+            'jinja': 'web', 'jinja2': 'web',
+            'liquid': 'web',
+            'mustache': 'web',
+            'twig': 'web',
+            'freemarker': 'web', 'ftl': 'web',
+            'velocity': 'web', 'vm': 'web',
+            'js': 'web',
+            'ts': 'web',
+            
+            # Media & Images
+            'jpg': 'media', 'jpeg': 'media', 'jpe': 'media',
+            'png': 'media', 'apng': 'media',
+            'gif': 'media', 'gifv': 'media',
+            'webp': 'media',
+            'svg': 'media', 'svgz': 'media',
+            'ico': 'media', 'cur': 'media',
+            'bmp': 'media', 'dib': 'media',
+            'tiff': 'media', 'tif': 'media',
+            'psd': 'media', 'psb': 'media',
+            'xcf': 'media',
+            'ai': 'media', 'eps': 'media',
+            'pdf': 'media',
+            'raw': 'media', 'cr2': 'media', 'crw': 'media', 'nef': 'media', 'raf': 'media', 'orf': 'media',
+            'heic': 'media', 'heif': 'media',
+            
+            # Audio
+            'mp3': 'media', 'wav': 'media', 'wma': 'media', 'flac': 'media',
+            'aac': 'media', 'm4a': 'media', 'm4b': 'media',
+            'ogg': 'media', 'oga': 'media',
+            'opus': 'media',
+            'aiff': 'media', 'aif': 'media',
+            'ape': 'media',
+            'alac': 'media',
+            'dsd': 'media',
+            'mid': 'media', 'midi': 'media',
+            
+            # Video
+            'mp4': 'media', 'm4v': 'media',
+            'avi': 'media', 'divx': 'media',
+            'mkv': 'media', 'mka': 'media', 'mks': 'media',
+            'mov': 'media', 'qt': 'media',
+            'flv': 'media', 'f4v': 'media',
+            'wmv': 'media', 'wm': 'media',
+            'webm': 'media',
+            '3gp': 'media', '3gpp': 'media', '3g2': 'media',
+            'ts': 'media', 'm2ts': 'media', 'mts': 'media',
+            'mxf': 'media',
+            'ogv': 'media',
+            'vob': 'media',
+            'f4p': 'media',
+            
+            # Archives & Compression
+            'zip': 'archives', 'zipx': 'archives',
+            'rar': 'archives',
+            '7z': 'archives',
+            'tar': 'archives', 'gz': 'archives', 'gzip': 'archives', 'tgz': 'archives', 'tar.gz': 'archives',
+            'tarbz2': 'archives', 'tar.bz2': 'archives', 'tbz': 'archives', 'tbz2': 'archives',
+            'bz2': 'archives', 'bzip2': 'archives',
+            'xz': 'archives',
+            'z': 'archives',
+            'lz': 'archives',
+            'lzma': 'archives',
+            'zstd': 'archives', 'zst': 'archives',
+            'brotli': 'archives', 'br': 'archives',
+            'cab': 'archives', 'msi': 'archives',
+            'iso': 'archives', 'cue': 'archives',
+            'dmg': 'archives', 'pkg': 'archives', 'udif': 'archives',
+            'deb': 'archives', 'rpm': 'archives', 'apk': 'archives',
+            'appimage': 'archives', 'asar': 'archives',
+            'whl': 'archives', 'egg': 'archives',
+            'tar': 'archives',
+            
+            # Fonts
+            'ttf': 'fonts', 'otf': 'fonts', 'woff': 'fonts', 'woff2': 'fonts',
+            'eot': 'fonts', 'fon': 'fonts', 'fnt': 'fonts',
+            'pfa': 'fonts', 'pfb': 'fonts', 'afm': 'fonts', 'ufm': 'fonts',
+            'ttc': 'fonts', 'dfont': 'fonts', 'suit': 'fonts',
+            
+            # Text Files
+            'txt': 'text', 'text': 'text', 'log': 'text',
+            'asc': 'text', 'ascii': 'text',
+            'nfo': 'text', 'inf': 'text',
+            'readme': 'text', 'license': 'text', 'license.txt': 'text',
+            'changelog': 'text', 'changes': 'text',
+            'contributing': 'text',
+            'authors': 'text',
+            'contributors': 'text',
+            'todo': 'text', 'fixme': 'text',
+            'notice': 'text',
+            'manifest': 'text',
+            'm3u': 'text', 'm3u8': 'text', 'pls': 'text',
+            'sub': 'text', 'srt': 'text', 'ass': 'text', 'ssa': 'text', 'vtt': 'text',
         }
         
         # Real-time status display variables (initialized later in setup_ui)
@@ -232,21 +457,35 @@ class MasterSearchGUI:
         category_frame.grid(row=6, column=0, columnspan=3, sticky="ew", pady=10)
         category_frame.grid_columnconfigure(1, weight=1)
 
-        # First row of categories
+        # Row 1: Programming & Markup
         cat_row1 = ttk.Frame(category_frame)
         cat_row1.grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 5))
+        ttk.Checkbutton(cat_row1, text="💻 Code", variable=self.category_code).pack(side="left", padx=(0, 15))
+        ttk.Checkbutton(cat_row1, text="📝 Markup", variable=self.category_markup).pack(side="left", padx=(0, 15))
+        ttk.Checkbutton(cat_row1, text="📄 Documents", variable=self.category_documents).pack(side="left", padx=(0, 15))
+        ttk.Checkbutton(cat_row1, text="📊 Spreadsheets", variable=self.category_spreadsheets).pack(side="left")
 
-        ttk.Checkbutton(cat_row1, text="💻 Code (.py, .java, .js, .cpp, etc.)", variable=self.category_code).pack(side="left", padx=(0, 20))
-        ttk.Checkbutton(cat_row1, text="📄 Documents (.pdf, .docx, .xlsx, etc.)", variable=self.category_documents).pack(side="left", padx=(0, 20))
-        ttk.Checkbutton(cat_row1, text="📊 Data (.csv, .json, .xml, .sql)", variable=self.category_data).pack(side="left")
-
-        # Second row of categories
+        # Row 2: Office & Data
         cat_row2 = ttk.Frame(category_frame)
-        cat_row2.grid(row=1, column=0, columnspan=3, sticky="w", pady=(0, 0))
+        cat_row2.grid(row=1, column=0, columnspan=3, sticky="w", pady=(0, 5))
+        ttk.Checkbutton(cat_row2, text="🎬 Presentations", variable=self.category_presentations).pack(side="left", padx=(0, 15))
+        ttk.Checkbutton(cat_row2, text="� Data", variable=self.category_data).pack(side="left", padx=(0, 15))
+        ttk.Checkbutton(cat_row2, text="🗄️  Databases", variable=self.category_databases).pack(side="left", padx=(0, 15))
+        ttk.Checkbutton(cat_row2, text="📝 Logs", variable=self.category_logs).pack(side="left")
 
-        ttk.Checkbutton(cat_row2, text="📝 Logs (.log, .txt)", variable=self.category_logs).pack(side="left", padx=(0, 20))
-        ttk.Checkbutton(cat_row2, text="⚙️  Config (.conf, .yaml, .ini, .toml)", variable=self.category_config).pack(side="left", padx=(0, 20))
-        ttk.Checkbutton(cat_row2, text="🌐 Web (.html, .css, .vue, etc.)", variable=self.category_web).pack(side="left")
+        # Row 3: Config & Web
+        cat_row3 = ttk.Frame(category_frame)
+        cat_row3.grid(row=2, column=0, columnspan=3, sticky="w", pady=(0, 5))
+        ttk.Checkbutton(cat_row3, text="⚙️  Config", variable=self.category_config).pack(side="left", padx=(0, 15))
+        ttk.Checkbutton(cat_row3, text="🌐 Web", variable=self.category_web).pack(side="left", padx=(0, 15))
+        ttk.Checkbutton(cat_row3, text="🖼️  Media", variable=self.category_media).pack(side="left", padx=(0, 15))
+        ttk.Checkbutton(cat_row3, text="📦 Archives", variable=self.category_archives).pack(side="left")
+
+        # Row 4: Fonts & Text
+        cat_row4 = ttk.Frame(category_frame)
+        cat_row4.grid(row=3, column=0, columnspan=3, sticky="w", pady=(0, 0))
+        ttk.Checkbutton(cat_row4, text="🔤 Fonts", variable=self.category_fonts).pack(side="left", padx=(0, 15))
+        ttk.Checkbutton(cat_row4, text="📄 Text Files", variable=self.category_text).pack(side="left")
 
         # Buttons
         button_frame = ttk.Frame(main_frame)
@@ -331,11 +570,19 @@ class MasterSearchGUI:
         # Check if selected categories include this file's category
         category_selected = {
             'code': self.category_code.get(),
+            'markup': self.category_markup.get(),
             'documents': self.category_documents.get(),
+            'spreadsheets': self.category_spreadsheets.get(),
+            'presentations': self.category_presentations.get(),
             'data': self.category_data.get(),
+            'databases': self.category_databases.get(),
             'logs': self.category_logs.get(),
             'config': self.category_config.get(),
             'web': self.category_web.get(),
+            'media': self.category_media.get(),
+            'archives': self.category_archives.get(),
+            'fonts': self.category_fonts.get(),
+            'text': self.category_text.get(),
         }
         
         # If extension is not in mapping, exclude it (only include known types)
@@ -463,20 +710,36 @@ class MasterSearchGUI:
             # Save category selections to settings
             settings_mgr = get_settings_manager()
             settings_mgr.set("category_code", self.category_code.get())
+            settings_mgr.set("category_markup", self.category_markup.get())
             settings_mgr.set("category_documents", self.category_documents.get())
+            settings_mgr.set("category_spreadsheets", self.category_spreadsheets.get())
+            settings_mgr.set("category_presentations", self.category_presentations.get())
             settings_mgr.set("category_data", self.category_data.get())
+            settings_mgr.set("category_databases", self.category_databases.get())
             settings_mgr.set("category_logs", self.category_logs.get())
             settings_mgr.set("category_config", self.category_config.get())
             settings_mgr.set("category_web", self.category_web.get())
+            settings_mgr.set("category_media", self.category_media.get())
+            settings_mgr.set("category_archives", self.category_archives.get())
+            settings_mgr.set("category_fonts", self.category_fonts.get())
+            settings_mgr.set("category_text", self.category_text.get())
             
             # Log selected categories
             selected_cats = []
             if self.category_code.get(): selected_cats.append("💻 Code")
+            if self.category_markup.get(): selected_cats.append("📝 Markup")
             if self.category_documents.get(): selected_cats.append("📄 Documents")
-            if self.category_data.get(): selected_cats.append("📊 Data")
+            if self.category_spreadsheets.get(): selected_cats.append("📊 Spreadsheets")
+            if self.category_presentations.get(): selected_cats.append("🎬 Presentations")
+            if self.category_data.get(): selected_cats.append("� Data")
+            if self.category_databases.get(): selected_cats.append("🗄️ Databases")
             if self.category_logs.get(): selected_cats.append("📝 Logs")
             if self.category_config.get(): selected_cats.append("⚙️ Config")
             if self.category_web.get(): selected_cats.append("🌐 Web")
+            if self.category_media.get(): selected_cats.append("🖼️ Media")
+            if self.category_archives.get(): selected_cats.append("📦 Archives")
+            if self.category_fonts.get(): selected_cats.append("🔤 Fonts")
+            if self.category_text.get(): selected_cats.append("📄 Text Files")
             
             if selected_cats:
                 self.log(f"   📁 Categories: {', '.join(selected_cats)}")
