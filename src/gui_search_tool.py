@@ -434,6 +434,8 @@ class MasterSearchGUI:
         if hasattr(self, 'current_search_tool') and self.current_search_tool:
             self.current_search_tool.stop_requested = True
         self.stop_btn.config(state="disabled")
+        # Re-enable the search button so user can start a new search
+        self.search_btn.config(state="normal", text=i18n.tr("btn_search"))
         self.log(i18n.tr("search_stopped"))
         self.update_status(i18n.tr("search_stopped_msg"))
 
