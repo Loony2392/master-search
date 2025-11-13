@@ -53,8 +53,27 @@ class DMGBuilder:
         if sys.platform != 'darwin':
             raise RuntimeError("❌ DMG building is only supported on macOS!")
         
+        # Detect macOS architecture
+        self.arch = self._detect_architecture()
+        
         print(f"🚀 Master Search DMG Builder v{self.version}")
+        print(f"📦 Architecture: {self.arch}")
         print("=" * 60)
+    
+    def _detect_architecture(self):
+        """Detect the current macOS architecture."""
+        try:
+            result = subprocess.run(['uname', '-m'], capture_output=True, text=True, check=True)
+            arch = result.stdout.strip()
+            
+            if arch == 'arm64':
+                return "Apple Silicon (ARM64/M1/M2/M3+)"
+            elif arch == 'x86_64':
+                return "Intel (x86_64)"
+            else:
+                return f"Unknown ({arch})"
+        except:
+            return "Unknown"
     
     def check_dependencies(self):
         """Check if required tools are available."""
