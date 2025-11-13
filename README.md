@@ -1,4 +1,4 @@
-# 🔍 Master Search
+![Master Search](https://raw.githubusercontent.com/Loony2392/master-search/main/media/master_search_icon_128x128.png)
 
 > Professional file search with extended features
 
