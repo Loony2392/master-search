@@ -228,19 +228,30 @@ class ModernProgressBar:
                                        fill=self.color, outline="", stipple="gray25")
     
     def _draw_neon_style(self):
-        """Neon glow moving bar style."""
-        bar_width = 60
-        x_pos = (self.animation_offset % (self.width + bar_width))
+        """Neon glow moving bar style - clean and sharp."""
+        bar_width = 70
+        x_pos = (self.animation_offset % (self.width + bar_width)) - bar_width
         
-        # Outer glow
-        glow_width = 80
-        glow_x = x_pos - (glow_width - bar_width) // 2
-        self.canvas.create_rectangle(glow_x, 0, glow_x + glow_width, self.height,
-                                   fill=self.color, outline="", stipple="gray50")
+        # Soft outer glow (far, very subtle)
+        glow_far_start = max(0, x_pos - 25)
+        glow_far_end = min(self.width, x_pos + bar_width + 25)
+        if glow_far_end > glow_far_start:
+            self.canvas.create_rectangle(glow_far_start, 0, glow_far_end, self.height,
+                                       fill=self.color, outline="", stipple="gray75")
         
-        # Bright center
-        self.canvas.create_rectangle(x_pos, 0, x_pos + bar_width, self.height,
-                                   fill=self.color, outline="")
+        # Medium glow (closer, more visible)
+        glow_med_start = max(0, x_pos - 12)
+        glow_med_end = min(self.width, x_pos + bar_width + 12)
+        if glow_med_end > glow_med_start:
+            self.canvas.create_rectangle(glow_med_start, 0, glow_med_end, self.height,
+                                       fill=self.color, outline="", stipple="gray50")
+        
+        # Bright neon core (the main bar)
+        bar_start = max(0, x_pos)
+        bar_end = min(self.width, x_pos + bar_width)
+        if bar_end > bar_start:
+            self.canvas.create_rectangle(bar_start, 0, bar_end, self.height,
+                                       fill=self.color, outline="")
     
     def _draw_smooth_style(self):
         """Smooth wave-like animation."""
@@ -279,26 +290,35 @@ class ModernProgressBar:
     def _draw_shimmer_style(self):
         """Spectacular shimmer effect with multiple light reflections."""
         # Full shimmer width
-        shimmer_width = 120
+        shimmer_width = 100
         x_pos = (self.animation_offset % (self.width + shimmer_width)) - shimmer_width
         
-        # Draw multiple light layers for shimmer effect
-        # Layer 1: Dark outer glow
-        self.canvas.create_rectangle(max(0, x_pos - 30), 0, min(self.width, x_pos + shimmer_width + 30), self.height,
-                                   fill=self.color, outline="", stipple="gray75")
+        # Layer 1: Dark outer glow (wide, subtle)
+        glow_start = max(0, x_pos - 40)
+        glow_end = min(self.width, x_pos + shimmer_width + 40)
+        if glow_end > glow_start:
+            self.canvas.create_rectangle(glow_start, 0, glow_end, self.height,
+                                       fill=self.color, outline="", stipple="gray75")
         
-        # Layer 2: Medium glow
-        self.canvas.create_rectangle(max(0, x_pos - 15), 0, min(self.width, x_pos + shimmer_width + 15), self.height,
-                                   fill=self.color, outline="", stipple="gray50")
+        # Layer 2: Medium glow (medium, more visible)
+        medium_start = max(0, x_pos - 20)
+        medium_end = min(self.width, x_pos + shimmer_width + 20)
+        if medium_end > medium_start:
+            self.canvas.create_rectangle(medium_start, 0, medium_end, self.height,
+                                       fill=self.color, outline="", stipple="gray50")
         
-        # Layer 3: Bright shimmer core
-        self.canvas.create_rectangle(max(0, x_pos), 0, min(self.width, x_pos + shimmer_width), self.height,
-                                   fill=self.color, outline="")
+        # Layer 3: Bright shimmer core (main bar)
+        core_start = max(0, x_pos)
+        core_end = min(self.width, x_pos + shimmer_width)
+        if core_end > core_start:
+            self.canvas.create_rectangle(core_start, 0, core_end, self.height,
+                                       fill=self.color, outline="")
         
         # Layer 4: Ultra-bright highlight at the leading edge
-        highlight_x = max(0, x_pos + shimmer_width - 10)
-        if highlight_x < self.width:
-            self.canvas.create_rectangle(highlight_x, 0, min(self.width, highlight_x + 8), self.height,
+        highlight_x = max(0, x_pos + shimmer_width - 15)
+        highlight_end = min(self.width, highlight_x + 10)
+        if highlight_end > highlight_x and highlight_x < self.width:
+            self.canvas.create_rectangle(highlight_x, 0, highlight_end, self.height,
                                        fill="#FFFFFF", outline="")
     
     def set_progress(self, value: float):
