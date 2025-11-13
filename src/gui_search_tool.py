@@ -49,6 +49,8 @@ from .settings_manager import get_settings_manager
 from . import i18n
 from .platform_utils import PlatformUtils, get_temp_dir, open_folder
 from .loading_animations import ModernProgressBar, ModernBounceLoader, LoadingOverlay, show_loading
+from .tooltip import add_tooltip
+from .category_definitions import CATEGORY_INFO
 
 # Create a simple config dict for compatibility
 PERFORMANCE_CONFIG = {
@@ -121,6 +123,11 @@ class MasterSearchGUI:
         self.category_archives = tk.BooleanVar(value=settings_mgr.get("category_archives", True))
         self.category_fonts = tk.BooleanVar(value=settings_mgr.get("category_fonts", True))
         self.category_text = tk.BooleanVar(value=settings_mgr.get("category_text", True))
+        
+        # OCR Settings (for image text recognition)
+        from .ocr_handler import get_ocr_handler
+        self.ocr_handler = get_ocr_handler()
+        self.use_ocr = tk.BooleanVar(value=settings_mgr.get("use_ocr", False) and self.ocr_handler.is_available())
         
         # File extension to category mapping - Comprehensive
         self.CATEGORY_MAPPING = {
@@ -457,35 +464,73 @@ class MasterSearchGUI:
         category_frame.grid(row=6, column=0, columnspan=3, sticky="ew", pady=10)
         category_frame.grid_columnconfigure(1, weight=1)
 
+        # Helper function to create category checkbox with tooltip
+        def create_category_button(parent, text, variable, category_key):
+            """Create checkbutton with tooltip showing file types"""
+            btn = ttk.Checkbutton(parent, text=text, variable=variable)
+            if category_key in CATEGORY_INFO:
+                # Create detailed tooltip
+                info = CATEGORY_INFO[category_key]
+                extensions = info['extensions']
+                ext_count = len(extensions)
+                
+                # Format extensions list (break every 8 items for readability)
+                ext_list = []
+                for i, ext in enumerate(extensions, 1):
+                    ext_list.append(f".{ext}")
+                    if i % 8 == 0:
+                        ext_list.append("\n")
+                
+                tooltip_text = f"{info['description']}\n({ext_count} file types)\n\n"
+                tooltip_text += ", ".join(ext_list)
+                
+                add_tooltip(btn, tooltip_text)
+            return btn
+
         # Row 1: Programming & Markup
         cat_row1 = ttk.Frame(category_frame)
         cat_row1.grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 5))
-        ttk.Checkbutton(cat_row1, text="💻 Code", variable=self.category_code).pack(side="left", padx=(0, 15))
-        ttk.Checkbutton(cat_row1, text="📝 Markup", variable=self.category_markup).pack(side="left", padx=(0, 15))
-        ttk.Checkbutton(cat_row1, text="📄 Documents", variable=self.category_documents).pack(side="left", padx=(0, 15))
-        ttk.Checkbutton(cat_row1, text="📊 Spreadsheets", variable=self.category_spreadsheets).pack(side="left")
+        create_category_button(cat_row1, "💻 Code", self.category_code, 'code').pack(side="left", padx=(0, 15))
+        create_category_button(cat_row1, "📝 Markup", self.category_markup, 'markup').pack(side="left", padx=(0, 15))
+        create_category_button(cat_row1, "📄 Documents", self.category_documents, 'documents').pack(side="left", padx=(0, 15))
+        create_category_button(cat_row1, "📊 Spreadsheets", self.category_spreadsheets, 'spreadsheets').pack(side="left")
 
         # Row 2: Office & Data
         cat_row2 = ttk.Frame(category_frame)
         cat_row2.grid(row=1, column=0, columnspan=3, sticky="w", pady=(0, 5))
-        ttk.Checkbutton(cat_row2, text="🎬 Presentations", variable=self.category_presentations).pack(side="left", padx=(0, 15))
-        ttk.Checkbutton(cat_row2, text="� Data", variable=self.category_data).pack(side="left", padx=(0, 15))
-        ttk.Checkbutton(cat_row2, text="🗄️  Databases", variable=self.category_databases).pack(side="left", padx=(0, 15))
-        ttk.Checkbutton(cat_row2, text="📝 Logs", variable=self.category_logs).pack(side="left")
+        create_category_button(cat_row2, "🎬 Presentations", self.category_presentations, 'presentations').pack(side="left", padx=(0, 15))
+        create_category_button(cat_row2, "💾 Data", self.category_data, 'data').pack(side="left", padx=(0, 15))
+        create_category_button(cat_row2, "🗄️  Databases", self.category_databases, 'databases').pack(side="left", padx=(0, 15))
+        create_category_button(cat_row2, "📝 Logs", self.category_logs, 'logs').pack(side="left")
 
         # Row 3: Config & Web
         cat_row3 = ttk.Frame(category_frame)
         cat_row3.grid(row=2, column=0, columnspan=3, sticky="w", pady=(0, 5))
-        ttk.Checkbutton(cat_row3, text="⚙️  Config", variable=self.category_config).pack(side="left", padx=(0, 15))
-        ttk.Checkbutton(cat_row3, text="🌐 Web", variable=self.category_web).pack(side="left", padx=(0, 15))
-        ttk.Checkbutton(cat_row3, text="🖼️  Media", variable=self.category_media).pack(side="left", padx=(0, 15))
-        ttk.Checkbutton(cat_row3, text="📦 Archives", variable=self.category_archives).pack(side="left")
+        create_category_button(cat_row3, "⚙️  Config", self.category_config, 'config').pack(side="left", padx=(0, 15))
+        create_category_button(cat_row3, "🌐 Web", self.category_web, 'web').pack(side="left", padx=(0, 15))
+        create_category_button(cat_row3, "🖼️  Media", self.category_media, 'media').pack(side="left", padx=(0, 15))
+        create_category_button(cat_row3, "📦 Archives", self.category_archives, 'archives').pack(side="left")
 
         # Row 4: Fonts & Text
         cat_row4 = ttk.Frame(category_frame)
         cat_row4.grid(row=3, column=0, columnspan=3, sticky="w", pady=(0, 0))
-        ttk.Checkbutton(cat_row4, text="🔤 Fonts", variable=self.category_fonts).pack(side="left", padx=(0, 15))
-        ttk.Checkbutton(cat_row4, text="📄 Text Files", variable=self.category_text).pack(side="left")
+        create_category_button(cat_row4, "🔤 Fonts", self.category_fonts, 'fonts').pack(side="left", padx=(0, 15))
+        create_category_button(cat_row4, "📄 Text Files", self.category_text, 'text').pack(side="left", padx=(0, 15))
+        
+        # OCR Option (only if available)
+        if self.ocr_handler.is_available():
+            ocr_text = f"{i18n.tr('ocr.in_images')} ({self.ocr_handler.get_preferred_engine()})"
+            ocr_checkbox = ttk.Checkbutton(
+                cat_row4, 
+                text=ocr_text,
+                variable=self.use_ocr
+            )
+            ocr_checkbox.pack(side="left", padx=(0, 15))
+            add_tooltip(ocr_checkbox, i18n.tr("ocr.tooltip"))
+        else:
+            ocr_label = ttk.Label(cat_row4, text=i18n.tr("ocr.not_installed"), foreground="gray")
+            ocr_label.pack(side="left", padx=(0, 15))
+            add_tooltip(ocr_label, i18n.tr("ocr.not_available_tooltip"))
 
         # Buttons
         button_frame = ttk.Frame(main_frame)
@@ -503,6 +548,7 @@ class MasterSearchGUI:
         self.folder_btn = ttk.Button(button_frame, text=i18n.tr("btn_report_folder"), command=self.open_report_folder)
         self.folder_btn.pack(side="left", padx=5)
 
+        ttk.Button(button_frame, text=i18n.tr("ocr.install_button"), command=self.install_ocr).pack(side="right", padx=5)
         ttk.Button(button_frame, text=i18n.tr("btn_info"), command=self.show_info).pack(side="right", padx=5)
 
         # Log frame
@@ -697,6 +743,22 @@ class MasterSearchGUI:
                 "use_regex": self.use_regex.get(),
                 "search_content": self.include_content.get(),
                 "max_workers": self.max_workers.get(),
+                # Category filters
+                "category_code": self.category_code.get(),
+                "category_markup": self.category_markup.get(),
+                "category_documents": self.category_documents.get(),
+                "category_spreadsheets": self.category_spreadsheets.get(),
+                "category_presentations": self.category_presentations.get(),
+                "category_data": self.category_data.get(),
+                "category_databases": self.category_databases.get(),
+                "category_logs": self.category_logs.get(),
+                "category_config": self.category_config.get(),
+                "category_web": self.category_web.get(),
+                "category_media": self.category_media.get(),
+                "category_archives": self.category_archives.get(),
+                "category_fonts": self.category_fonts.get(),
+                "category_text": self.category_text.get(),
+                "use_ocr": self.use_ocr.get(),
             }
 
             self.log(i18n.tr("log_start_search"))
@@ -723,6 +785,7 @@ class MasterSearchGUI:
             settings_mgr.set("category_archives", self.category_archives.get())
             settings_mgr.set("category_fonts", self.category_fonts.get())
             settings_mgr.set("category_text", self.category_text.get())
+            settings_mgr.set("use_ocr", self.use_ocr.get())
             
             # Log selected categories
             selected_cats = []
@@ -757,6 +820,23 @@ class MasterSearchGUI:
             search_tool.max_workers = search_params["max_workers"]
             # IMPORTANT: Disable multiprocessing in GUI context (prevents multiple window spawning)
             search_tool.use_multiprocessing = False
+            # Set category filters
+            search_tool.category_code = search_params.get("category_code", True)
+            search_tool.category_markup = search_params.get("category_markup", True)
+            search_tool.category_documents = search_params.get("category_documents", True)
+            search_tool.category_spreadsheets = search_params.get("category_spreadsheets", True)
+            search_tool.category_presentations = search_params.get("category_presentations", True)
+            search_tool.category_data = search_params.get("category_data", True)
+            search_tool.category_databases = search_params.get("category_databases", True)
+            search_tool.category_logs = search_params.get("category_logs", True)
+            search_tool.category_config = search_params.get("category_config", True)
+            search_tool.category_web = search_params.get("category_web", True)
+            search_tool.category_media = search_params.get("category_media", True)
+            search_tool.category_archives = search_params.get("category_archives", True)
+            search_tool.category_fonts = search_params.get("category_fonts", True)
+            search_tool.category_text = search_params.get("category_text", True)
+            # Set OCR enabled/disabled
+            search_tool.use_ocr = self.use_ocr.get()
             
             # Set callback function for real-time status updates
             search_tool.status_callback = self.on_search_status_update
@@ -772,10 +852,20 @@ class MasterSearchGUI:
             excluded_count = 0
             if results:
                 before_filter = len(results)
-                results = [
-                    result for result in results 
-                    if self.is_file_in_selected_categories(result.get('path', ''))
-                ]
+                filtered_results = []
+                for result in results:
+                    if self.is_file_in_selected_categories(result.get('path', '')):
+                        # Mark if any match contains OCR text
+                        is_ocr_match = any('[OCR]' in str(m.get('line_content', '')) for m in result.get('matches', []))
+                        result['is_ocr_match'] = is_ocr_match
+                        
+                        # Add file category
+                        file_category = search_tool.get_file_category(result.get('path', ''))
+                        result['category'] = file_category
+                        
+                        filtered_results.append(result)
+                
+                results = filtered_results
                 after_filter = len(results)
                 excluded_count = before_filter - after_filter
                 if excluded_count > 0:
@@ -941,11 +1031,41 @@ class MasterSearchGUI:
             # Fallback wenn version.py nicht gefunden wird
             about_text = i18n.tr("about_text").format("2025.11.10")
             messagebox.showinfo(i18n.tr("about_title"), about_text)
+    
+    def install_ocr(self):
+        """Open OCR installation dialog"""
+        try:
+            from .ocr_installation_dialog import show_ocr_installation_dialog
+            
+            def on_install_complete(success):
+                if success:
+                    # Refresh OCR handler status
+                    from .ocr_handler import get_ocr_handler
+                    self.ocr_handler = get_ocr_handler(force_reload=True)
+                    
+                    # Update OCR checkbox if now available
+                    if self.ocr_handler.is_available():
+                        self.use_ocr.set(True)
+                        engine = self.ocr_handler.get_preferred_engine()
+                        messagebox.showinfo(
+                            i18n.tr("ocr.install_complete"),
+                            i18n.tr("ocr.install_success").format(engine=engine)
+                        )
+                    else:
+                        messagebox.showwarning(
+                            i18n.tr("ocr.install_failed"),
+                            i18n.tr("ocr.install_error")
+                        )
+            
+            dialog = show_ocr_installation_dialog(self.root, on_install_complete)
+        except Exception as e:
+            messagebox.showerror(i18n.tr("error"), f"Could not open OCR installation dialog:\n{str(e)}")
 
     def show_release_notes(self):
         """Zeigt die Release Notes in einem separaten Fenster."""
         try:
             from version import VERSION
+            from pathlib import Path
             
             # Prüfe ob diese Version bereits gezeigt wurde
             settings_mgr = get_settings_manager()
@@ -953,6 +1073,9 @@ class MasterSearchGUI:
             
             # Zeige Release Notes wenn noch nicht gezeigt
             if VERSION != last_version:
+                # Versuche, die Release Notes aus der Datei zu laden
+                release_notes = self._load_release_notes(VERSION)
+                
                 # Erstelle eigenständiges Release Notes Fenster
                 notes_window = tk.Toplevel(self.root)
                 notes_window.title(f"🆕 Master Search v{VERSION} - Release Notes")
@@ -972,7 +1095,7 @@ class MasterSearchGUI:
                 
                 date_label = ttk.Label(
                     header_frame,
-                    text=f"Released: November 12, 2025",
+                    text=f"Released: {self._get_release_date(VERSION)}",
                     font=("Segoe UI", 10),
                     foreground="gray"
                 )
@@ -1000,73 +1123,6 @@ class MasterSearchGUI:
                 )
                 text_widget.pack(fill="both", expand=True)
                 scrollbar.config(command=text_widget.yview)
-                
-                # Release Notes Content
-                release_notes = f"""🎉 Master Search v{VERSION}
-
-✨ NEUE FEATURES
-
-📍 Zeilennummern in Suchergebnissen
-   • Zeilennummern bei allen Dateitypen angezeigt
-   • Unterstützung für: Text, Code, CSV, PDF, Office, Logs, HTML, XML
-   • Konsistente Anzeige im Report: "Zeile N:"
-
-📊 Unterstützte Dateitypen mit Zeilennummern
-   • Textdateien: .txt, .md, .rst, .log
-   • Code: .py, .js, .java, .cpp, .cs, .rb, .go, .rs, .sh, .ps1, .bat
-   • Web & Markup: .html, .xml, .json, .css, .vue, .svelte
-   • Daten: .csv, .sql, .yaml, .ini, .conf
-   • Office: .docx, .doc, .pdf, .xlsx, .pptx, .odt, .rtf
-
-🔧 VERBESSERTE EXTRAKTOREN
-
-   ✅ DOCX - mit Paragraph-Nummern
-   ✅ DOC - alte Word-Dateien
-   ✅ PDF - mit PyPDF2
-   ✅ PPTX - PowerPoint Slides
-   ✅ ODT - OpenDocument Format
-   ✅ RTF - Rich Text Format
-   ✅ XLSX - Excel Spreadsheets
-   ✅ CSV - mit Encoding-Unterstützung
-   ✅ LOG - Log-Dateien
-   ✅ Standard-Textdateien
-
-🧪 TESTING
-
-   • Umfangreiche Tests mit 13+ Dateitypen
-   • Validierung aller Extraktoren
-   • Performance optimiert
-
-📥 REPORT-BUTTONS
-
-   • "Öffnen" Button - Öffnet in Windows Explorer
-   • "Download" Button - Download via Browser
-   • Mobile-responsive Design
-   • Automatisches Fallback zu Clipboard
-
-⚡ PERFORMANCE
-
-   • Echtzeit Status-Display während Suche
-   • Datei-Counter, Match-Counter, Scan-Speed
-   • Multi-Threading/Multi-Processing
-   • Optimierte Batch-Verarbeitung
-
----
-
-🚀 PRODUCTION READY
-   Vollständig getestet und produktionsreif!
-
-💡 TIPPS
-
-   • Drücke ENTER um Suche zu starten
-   • Drücke STRG+O um Ordner zu wählen
-   • Drücke STRG+R um letzten Report zu öffnen
-   • Verwende Regex für erweiterte Suche
-
----
-
-Version {VERSION} © 2025 LOONY-TECH
-www.loony-tech.de"""
                 
                 text_widget.insert("1.0", release_notes)
                 text_widget.config(state="disabled")  # Readonly
@@ -1144,6 +1200,99 @@ www.loony-tech.de"""
             settings_mgr.save_settings()
         except Exception as e:
             print(f"⚠️  Could not save settings: {e}")
+
+    def _load_release_notes(self, version: str) -> str:
+        """Lädt Release Notes aus der Markdown-Datei oder fallback Inhalt."""
+        try:
+            from pathlib import Path
+            
+            # Versuche Release Notes Datei zu finden
+            release_file = Path(__file__).parent.parent / f"RELEASE_NOTES_v{version}.md"
+            
+            if release_file.exists():
+                content = release_file.read_text(encoding='utf-8')
+                # Konvertiere Markdown in einfachen Text
+                content = self._markdown_to_text(content)
+                return content
+        except Exception as e:
+            print(f"⚠️  Could not load release notes: {e}")
+        
+        # Fallback: Standard-Meldung
+        return f"""🎉 Master Search v{version}
+
+✨ Neue Version verfügbar!
+
+🚀 Alle Features
+   • Professionelle Dateisuche
+   • Multi-Term Suche
+   • OCR für Bilder
+   • HTML-Reports
+   • Kategorien-Filter
+
+💡 Tipps
+   • Drücke ENTER um Suche zu starten
+   • Drücke STRG+O um Ordner zu wählen
+   • Drücke STRG+R um letzten Report zu öffnen
+
+---
+
+© 2025 LOONY-TECH - www.loony-tech.de"""
+
+    def _get_release_date(self, version: str) -> str:
+        """Extrahiert das Release-Datum aus der Release Notes Datei."""
+        try:
+            from pathlib import Path
+            import re
+            
+            release_file = Path(__file__).parent.parent / f"RELEASE_NOTES_v{version}.md"
+            
+            if release_file.exists():
+                content = release_file.read_text(encoding='utf-8')
+                # Suche nach Date Pattern: "November 13, 2025" oder "13. November 2025"
+                # Extrahiere die erste Zeile mit Datum
+                match = re.search(r'Release Date.*?:\s*\*?\*?(.+?)\*?\*?(?:\n|$)', content, re.IGNORECASE)
+                if match:
+                    return match.group(1).strip()
+        except Exception:
+            pass
+        
+        return "November 13, 2025"
+
+    def _markdown_to_text(self, markdown: str) -> str:
+        """Konvertiert Markdown in lesbar formatierter Text."""
+        import re
+        
+        # Entferne HTML-Kommentare
+        text = re.sub(r'<!--.*?-->', '', markdown, flags=re.DOTALL)
+        
+        # Konvertiere Überschriften
+        text = re.sub(r'^#{1,6}\s+(.+)$', r'\1', text, flags=re.MULTILINE)
+        
+        # Konvertiere **bold** zu Großbuchstaben
+        text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
+        
+        # Entferne *italic*
+        text = re.sub(r'\*(.+?)\*', r'\1', text)
+        
+        # Entferne Markdown-Links [text](url)
+        text = re.sub(r'\[(.+?)\]\((.+?)\)', r'\1', text)
+        
+        # Konvertiere Markdown-Aufzählungen
+        text = re.sub(r'^[-*+]\s+', '  • ', text, flags=re.MULTILINE)
+        
+        # Entferne Markdown-Zitate
+        text = re.sub(r'^>\s+', '  ', text, flags=re.MULTILINE)
+        
+        # Entferne horizontale Linien
+        text = re.sub(r'^[-*_]{3,}$', '', text, flags=re.MULTILINE)
+        
+        # Entferne mehrfache Leerzeilen
+        text = re.sub(r'\n\n\n+', '\n\n', text)
+        
+        # Bereinige Anfang und Ende
+        text = text.strip()
+        
+        return text
 
 
 # NOTE: Do NOT add any main() or if __name__ == "__main__" here!

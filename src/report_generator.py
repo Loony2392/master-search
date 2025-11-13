@@ -200,6 +200,7 @@ class HTMLReportGenerator:
         # Count results by type
         file_count = len([r for r in results if r['type'] == 'file'])
         folder_count = len([r for r in results if r['type'] == 'folder'])
+        ocr_count = len([r for r in results if r.get('is_ocr_match', False)])
         total_count = len(results)
         
         # Build HTML
@@ -211,7 +212,7 @@ class HTMLReportGenerator:
             '    <div class="container">',
             self._get_html_header_section(),
             self._get_html_search_info(search_terms_display),
-            self._get_html_stats(total_count, file_count, folder_count),
+            self._get_html_stats(total_count, file_count, folder_count, ocr_count),
         ]
         
         # Add category overview if results exist
@@ -486,6 +487,203 @@ class HTMLReportGenerator:
             color: #333;
         }
         
+        .ocr-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+            white-space: nowrap;
+            background: linear-gradient(135deg, #7b1fa2 0%, #9c27b0 100%);
+            color: white;
+            margin-left: 10px;
+            box-shadow: 0 2px 8px rgba(156, 39, 176, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            letter-spacing: 0.5px;
+        }
+        
+        .ocr-badge::before {
+            content: '🖼️';
+            font-size: 1.1em;
+        }
+        
+        .category-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            font-weight: 600;
+            white-space: nowrap;
+            margin-left: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.2s ease;
+            cursor: default;
+        }
+        
+        .category-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            border-color: rgba(255, 255, 255, 0.4);
+            filter: brightness(1.15);
+        }
+        
+        .category-badge.code {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+        }
+        
+        .category-badge.code:hover {
+            background: linear-gradient(135deg, #42A5F5 0%, #1E88E5 100%);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.35);
+        }
+        
+        .category-badge.markup {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+            color: white;
+        }
+        
+        .category-badge.markup:hover {
+            background: linear-gradient(135deg, #FFB74D 0%, #FB8C00 100%);
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.35);
+        }
+        
+        .category-badge.documents {
+            background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+            color: white;
+        }
+        
+        .category-badge.documents:hover {
+            background: linear-gradient(135deg, #66BB6A 0%, #43A047 100%);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.35);
+        }
+        
+        .category-badge.spreadsheets {
+            background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%);
+            color: white;
+        }
+        
+        .category-badge.spreadsheets:hover {
+            background: linear-gradient(135deg, #4DD0E1 0%, #00ACC1 100%);
+            box-shadow: 0 4px 12px rgba(0, 188, 212, 0.35);
+        }
+        
+        .category-badge.presentations {
+            background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
+            color: white;
+        }
+        
+        .category-badge.presentations:hover {
+            background: linear-gradient(135deg, #EF5350 0%, #E53935 100%);
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.35);
+        }
+        
+        .category-badge.data {
+            background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
+            color: white;
+        }
+        
+        .category-badge.data:hover {
+            background: linear-gradient(135deg, #BA68C8 0%, #8E24AA 100%);
+            box-shadow: 0 4px 12px rgba(156, 39, 176, 0.35);
+        }
+        
+        .category-badge.databases {
+            background: linear-gradient(135deg, #795548 0%, #5D4037 100%);
+            color: white;
+        }
+        
+        .category-badge.databases:hover {
+            background: linear-gradient(135deg, #A1887F 0%, #6D4C41 100%);
+            box-shadow: 0 4px 12px rgba(121, 85, 72, 0.35);
+        }
+        
+        .category-badge.logs {
+            background: linear-gradient(135deg, #607D8B 0%, #455A64 100%);
+            color: white;
+        }
+        
+        .category-badge.logs:hover {
+            background: linear-gradient(135deg, #90A4AE 0%, #546E7A 100%);
+            box-shadow: 0 4px 12px rgba(96, 125, 139, 0.35);
+        }
+        
+        .category-badge.config {
+            background: linear-gradient(135deg, #673AB7 0%, #512DA8 100%);
+            color: white;
+        }
+        
+        .category-badge.config:hover {
+            background: linear-gradient(135deg, #7E57C2 0%, #5E35B1 100%);
+            box-shadow: 0 4px 12px rgba(103, 58, 183, 0.35);
+        }
+        
+        .category-badge.web {
+            background: linear-gradient(135deg, #3F51B5 0%, #303F9F 100%);
+            color: white;
+        }
+        
+        .category-badge.web:hover {
+            background: linear-gradient(135deg, #5C6BC0 0%, #3949AB 100%);
+            box-shadow: 0 4px 12px rgba(63, 81, 181, 0.35);
+        }
+        
+        .category-badge.media {
+            background: linear-gradient(135deg, #E91E63 0%, #C2185B 100%);
+            color: white;
+        }
+        
+        .category-badge.media:hover {
+            background: linear-gradient(135deg, #F06292 0%, #C2185B 100%);
+            box-shadow: 0 4px 12px rgba(233, 30, 99, 0.35);
+        }
+        
+        .category-badge.archives {
+            background: linear-gradient(135deg, #FF5722 0%, #E64A19 100%);
+            color: white;
+        }
+        
+        .category-badge.archives:hover {
+            background: linear-gradient(135deg, #FF7043 0%, #FF6E40 100%);
+            box-shadow: 0 4px 12px rgba(255, 87, 34, 0.35);
+        }
+        
+        .category-badge.fonts {
+            background: linear-gradient(135deg, #009688 0%, #00796B 100%);
+            color: white;
+        }
+        
+        .category-badge.fonts:hover {
+            background: linear-gradient(135deg, #26A69A 0%, #00897B 100%);
+            box-shadow: 0 4px 12px rgba(0, 150, 136, 0.35);
+        }
+        
+        .category-badge.text {
+            background: linear-gradient(135deg, #8BC34A 0%, #689F38 100%);
+            color: white;
+        }
+        
+        .category-badge.text:hover {
+            background: linear-gradient(135deg, #9CCC65 0%, #7CB342 100%);
+            box-shadow: 0 4px 12px rgba(139, 195, 74, 0.35);
+        }
+        
+        .category-badge.other {
+            background: linear-gradient(135deg, #9E9E9E 0%, #616161 100%);
+            color: white;
+        }
+        
+        .category-badge.other:hover {
+            background: linear-gradient(135deg, #BDBDBD 0%, #757575 100%);
+            box-shadow: 0 4px 12px rgba(158, 158, 158, 0.35);
+        }
+        
         .file-path {
             color: #666;
             font-family: 'Courier New', monospace;
@@ -548,31 +746,54 @@ class HTMLReportGenerator:
         
         .match-item {
             background-color: #f8f9fa;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            border-left: 4px solid #28a745;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            border-left: 5px solid #28a745;
+            border-right: 1px solid #e0e0e0;
             font-family: 'Courier New', monospace;
-            font-size: 0.9em;
+            font-size: 0.92em;
             word-break: break-word;
+            line-height: 1.6;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .match-item:hover {
+            background-color: #e8eef7;
+            border-left-color: #20c997;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
         }
         
         .match-item.filename-match {
-            border-left-color: #ffc107;
-            background-color: #fffbf0;
+            border-left-color: #ff9800;
+            background-color: #fff8e1;
+            border-right-color: #ffd699;
+        }
+        
+        .match-item.filename-match:hover {
+            background-color: #fff5cc;
+            border-left-color: #ffb74d;
         }
         
         .line-number {
             color: #007acc;
             font-weight: bold;
-            margin-right: 10px;
+            margin-right: 12px;
+            display: inline-block;
+            min-width: 50px;
+            text-align: right;
+            padding-right: 8px;
+            border-right: 2px solid #e0e0e0;
         }
         
         .highlight {
             background-color: #ffeb3b;
-            padding: 2px 4px;
-            border-radius: 2px;
-            font-weight: 600;
+            color: #333;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-weight: 700;
+            box-shadow: 0 0 4px rgba(255, 235, 59, 0.5);
         }
         
         .show-more-container {
@@ -838,9 +1059,9 @@ class HTMLReportGenerator:
             </div>
         </div>'''
     
-    def _get_html_stats(self, total: int, files: int, folders: int) -> str:
+    def _get_html_stats(self, total: int, files: int, folders: int, ocr: int = 0) -> str:
         """Get statistics section."""
-        return f'''        <div class="stats">
+        stats_html = f'''        <div class="stats">
             <div class="stat-item">
                 <span class="stat-number">{total}</span>
                 <div class="stat-label">{tr('total_results')}</div>
@@ -852,19 +1073,37 @@ class HTMLReportGenerator:
             <div class="stat-item">
                 <span class="stat-number">{folders}</span>
                 <div class="stat-label">{tr('folders_found')}</div>
-            </div>
+            </div>'''
+        
+        # Add OCR stat if there are OCR matches
+        if ocr > 0:
+            stats_html += f'''
+            <div class="stat-item">
+                <span class="stat-number">{ocr}</span>
+                <div class="stat-label">🖼️ OCR Matches</div>
+            </div>'''
+        
+        stats_html += '''
         </div>'''
+        return stats_html
     
     def _get_category_stats(self, results: List[Dict[str, Any]]) -> str:
-        """Get category statistics by file type."""
+        """Get category statistics by category type."""
         if not results:
             return ''
         
-        # Count results by file type
+        # Count results by category (overarching category, not file type)
         category_counts = {}
         for result in results:
-            file_type = result.get('type', 'unknown')
-            category_counts[file_type] = category_counts.get(file_type, 0) + 1
+            category = result.get('category', 'other')
+            is_ocr = result.get('is_ocr_match', False)
+            
+            if is_ocr:
+                category_key = f"{category} (OCR)"
+            else:
+                category_key = category
+            
+            category_counts[category_key] = category_counts.get(category_key, 0) + 1
         
         # Sort by count (descending), then alphabetically
         sorted_categories = sorted(category_counts.items(), 
@@ -872,9 +1111,41 @@ class HTMLReportGenerator:
         
         # Build category items HTML
         category_items = []
-        for file_type, count in sorted_categories:
+        for category_key, count in sorted_categories:
+            # Parse category name (remove OCR suffix if present)
+            is_ocr = " (OCR)" in category_key
+            category_name = category_key.replace(" (OCR)", "").lower()
+            
+            # Map category to emoji
+            category_emoji_map = {
+                'code': '💻',
+                'markup': '�',
+                'documents': '📄',
+                'spreadsheets': '📊',
+                'presentations': '🎯',
+                'data': '�️',
+                'databases': '�️',
+                'logs': '📋',
+                'config': '⚙️',
+                'web': '🌐',
+                'media': '🖼️',
+                'archives': '📦',
+                'fonts': '🔤',
+                'text': '📃',
+                'other': '📑',
+            }
+            
+            emoji = category_emoji_map.get(category_name, '📑')
+            
+            # Add OCR indicator if needed
+            if is_ocr:
+                emoji = "🖼️"
+                display_text = f"{category_name.replace('_', ' ').title()} (OCR)"
+            else:
+                display_text = category_name.replace('_', ' ').title()
+            
             category_items.append(f'''            <div class="category-item">
-                <span class="category-name">{html.escape(file_type.upper())}</span>
+                <span class="category-name">{emoji} {html.escape(display_text.upper())}</span>
                 <span class="category-count">{count}</span>
             </div>''')
         
@@ -898,9 +1169,42 @@ class HTMLReportGenerator:
     def _extract_context_words(self, line_content: str, search_terms: List[str], context_words: int = 5) -> str:
         """Extract context around search terms: show only N words before and after."""
         try:
+            # Hard limit on line length to prevent endless strings
+            MAX_DISPLAY_LENGTH = 500  # Characters
+            CONTEXT_CHARS = 150  # Characters before/after match
+            
+            # First check if line is too long character-wise
+            if len(line_content) > MAX_DISPLAY_LENGTH:
+                # Find search term position
+                best_pos = -1
+                best_term_len = 0
+                
+                for term in search_terms:
+                    pos = line_content.lower().find(term.lower())
+                    if pos != -1:
+                        # Prefer longer matches or earlier matches
+                        if best_pos == -1 or len(term) > best_term_len:
+                            best_pos = pos
+                            best_term_len = len(term)
+                
+                if best_pos != -1:
+                    # Extract context around term (150 chars before/after match)
+                    start = max(0, best_pos - CONTEXT_CHARS)
+                    end = min(len(line_content), best_pos + best_term_len + CONTEXT_CHARS)
+                    
+                    result = line_content[start:end]
+                    if start > 0:
+                        result = '...' + result
+                    if end < len(line_content):
+                        result = result + '...'
+                    return result
+                
+                # If no term found, just truncate at beginning
+                return line_content[:MAX_DISPLAY_LENGTH] + '...'
+            
             words = line_content.split()
             
-            # If line is short enough, return as is
+            # If line is short enough (both in words AND characters), return as is
             if len(words) <= context_words * 2 + 3:
                 return line_content
             
@@ -914,12 +1218,14 @@ class HTMLReportGenerator:
             
             if not positions:
                 # No terms found, return truncated version
-                return ' '.join(words[:context_words * 2 + 1]) + '...'
+                truncated = ' '.join(words[:context_words * 2 + 1]) + '...'
+                return truncated[:MAX_DISPLAY_LENGTH] if len(truncated) > MAX_DISPLAY_LENGTH else truncated
             
             # Find the range to display (with context)
             min_pos = min(positions)
             max_pos = max(positions)
             
+            # Extend context to ensure we have enough characters around match
             start = max(0, min_pos - context_words)
             end = min(len(words), max_pos + context_words + 1)
             
@@ -933,9 +1239,30 @@ class HTMLReportGenerator:
             if end < len(words):
                 result_words.append('...')
             
-            return ' '.join(result_words)
+            result = ' '.join(result_words)
+            
+            # Final character limit check - if still too long, show context around match
+            if len(result) > MAX_DISPLAY_LENGTH:
+                # Fallback: use character-based context extraction
+                match_word = words[min_pos] if min_pos < len(words) else ''
+                match_pos = line_content.lower().find(match_word.lower())
+                if match_pos != -1:
+                    start = max(0, match_pos - CONTEXT_CHARS)
+                    end = min(len(line_content), match_pos + len(match_word) + CONTEXT_CHARS)
+                    fallback = line_content[start:end]
+                    if start > 0:
+                        fallback = '...' + fallback
+                    if end < len(line_content):
+                        fallback = fallback + '...'
+                    return fallback
+                return result[:MAX_DISPLAY_LENGTH] + '...'
+            
+            return result
         
         except Exception:
+            # Fallback: truncate if something goes wrong
+            if len(line_content) > MAX_DISPLAY_LENGTH:
+                return line_content[:MAX_DISPLAY_LENGTH] + '...'
             return line_content
     
     def _get_result_item_html(self, result: Dict[str, Any]) -> str:
@@ -967,7 +1294,8 @@ class HTMLReportGenerator:
             line_content = match.get('line_content', '')
             
             # For long lines, extract only context around search terms (5 words before/after)
-            if len(line_content.split()) > 20:  # Only if line is longer than 20 words
+            # Check both word count AND character length to handle very long strings
+            if len(line_content.split()) > 20 or len(line_content) > 500:  # Limit to 500 chars
                 context_content = self._extract_context_words(line_content, self.search_terms)
             else:
                 context_content = line_content
@@ -983,13 +1311,13 @@ class HTMLReportGenerator:
             
             if line_num > 0:
                 match_items.append(f'''            <div class="match-item">
-                <span class="line-number">{tr('line')} {line_num}:</span>{content}
+                <span class="line-number">{tr('line')} {line_num}</span><span style="word-break: break-word; display: inline-block; width: calc(100% - 70px); vertical-align: top;">{content}</span>
             </div>''')
             else:
                 is_filename = content.startswith('📄') or content.startswith('📁')
                 css_class = 'filename-match' if is_filename else ''
                 match_items.append(f'''            <div class="match-item {css_class}">
-                {content}
+                <span style="word-break: break-word;">{content}</span>
             </div>''')
         
         # Add hidden matches (initially hidden)
@@ -998,7 +1326,8 @@ class HTMLReportGenerator:
             line_content = match.get('line_content', '')
             
             # For long lines, extract only context around search terms (5 words before/after)
-            if len(line_content.split()) > 20:  # Only if line is longer than 20 words
+            # Check both word count AND character length to handle very long strings
+            if len(line_content.split()) > 20 or len(line_content) > 500:  # Limit to 500 chars
                 context_content = self._extract_context_words(line_content, self.search_terms)
             else:
                 context_content = line_content
@@ -1044,6 +1373,8 @@ class HTMLReportGenerator:
                     <div class="file-name">
                         {name}
                         <span class="file-type {result_type}">{result_type}</span>
+                        {'<span class="category-badge ' + result.get('category', 'other') + '">' + (result.get('category', 'other').upper()) + '</span>' if result.get('category') else ''}
+                        {'<span class="ocr-badge" title="Text wurde mit optischer Zeichenerkennung (OCR) extrahiert">OCR</span>' if result.get('is_ocr_match', False) else ''}
                     </div>
                     <div class="file-path">{path}</div>
                 </div>

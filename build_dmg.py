@@ -184,8 +184,12 @@ OPTIONS = {{
                 'settings_manager', 'update_notifier', 'i18n', 'version',
                 'language_config', 'performance_config', 'loading_animations'],
     # Exclude heavy or build-time-only packages to avoid duplicate metadata files
-    'excludes': ['PyQt4', 'PyQt5', 'matplotlib', 'numpy', 'scipy', 'wheel', 'setuptools', 'pkg_resources'],
+    'excludes': ['PyQt4', 'PyQt5', 'matplotlib', 'numpy', 'scipy', 'wheel', 'setuptools', 
+                'pkg_resources', 'sphinx', 'pytest', 'unittest', 'doctest', 'pydoc',
+                'easyocr', 'paddleocr', 'pytesseract', 'cv2', 'pandas', 'sklearn'],
     'resources': ['locales/', 'media/'],
+    'strip': True,  # Strip debug info to reduce size
+    'use_pythonpath': False,  # Reduce recursion issues
     'plist': {{
         'CFBundleName': '{self.app_name}',
         'CFBundleDisplayName': '{self.app_name}',
@@ -241,6 +245,31 @@ setup(
         print(f"✅ Created {setup_file}")
         return setup_file
     
+    def install_ocr_dependencies(self):
+        """Install OCR engines into the build environment."""
+        print("\n🎨 Installing OCR Engines...")
+        
+        try:
+            # Run OCR setup script
+            ocr_setup = self.project_root / 'scripts' / 'setup_ocr.py'
+            if ocr_setup.exists():
+                cmd = [sys.executable, str(ocr_setup)]
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+                
+                if result.returncode == 0:
+                    print("✅ OCR engines installed successfully")
+                    return True
+                else:
+                    print("⚠️  OCR installation had issues (non-critical)")
+                    print(result.stderr[:500] if result.stderr else "No error details")
+                    return True  # Don't fail the build
+            else:
+                print("⚠️  OCR setup script not found (skipping)")
+                return True
+        except Exception as e:
+            print(f"⚠️  OCR installation skipped: {e}")
+            return True  # Don't fail the build
+
     def build_app_bundle(self):
         """Build the macOS App Bundle."""
         print("\n🏗️  Building macOS App Bundle...")
@@ -602,6 +631,9 @@ Version: {self.version}
             
             # Create setup.py
             setup_file = self.create_setup_py()
+            
+            # Install OCR dependencies
+            self.install_ocr_dependencies()
             
             # Build App Bundle
             app_path = self.build_app_bundle()

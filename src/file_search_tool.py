@@ -250,6 +250,10 @@ class FileSearchTool:
             '.edcx', '.properties',
             '.m3u', '.m3u8', '.pls',
             '.sub', '.srt', '.ass', '.ssa', '.vtt',
+            
+            # Image Formats (for OCR text extraction)
+            '.jpg', '.jpeg', '.jpe', '.png', '.gif', '.bmp', '.webp', '.svg',
+            '.ico', '.tiff', '.tif', '.pdf',
         }
         # Farben für verschiedene Betriebssysteme
         self.colors = self._init_colors()
@@ -271,6 +275,31 @@ class FileSearchTool:
         
         # Real-time status callback
         self.status_callback = None  # Callback-Funktion für GUI-Updates
+        
+        # Category filters (all enabled by default)
+        self.category_code = True
+        self.category_markup = True
+        self.category_documents = True
+        self.category_spreadsheets = True
+        self.category_presentations = True
+        self.category_data = True
+        self.category_databases = True
+        self.category_logs = True
+        self.category_config = True
+        self.category_web = True
+        self.category_media = True
+        self.category_archives = True
+        self.category_fonts = True
+        self.category_text = True
+        
+        # OCR Support
+        self.use_ocr = False  # Enable/disable OCR
+        self.ocr_handler = None  # Will be set by GUI if needed
+        try:
+            from .ocr_handler import get_ocr_handler
+            self.ocr_handler = get_ocr_handler()
+        except:
+            pass  # OCR not available
     
     def _get_optimal_worker_count(self):
         """Ermittelt die optimale Anzahl von Worker-Threads/Prozessen."""
@@ -312,6 +341,86 @@ class FileSearchTool:
             return {key: '' for key in ['header', 'success', 'error', 'warning', 
                                       'info', 'highlight', 'path', 'number', 'reset']}
     
+    def get_filtered_extensions(self):
+        """Build filtered extension set based on enabled categories."""
+        filtered = set()
+        
+        # Category definitions with their extensions
+        category_extensions = {
+            'code': {'.py', '.pyc', '.pyo', '.pyd', '.java', '.class', '.jar', '.js', '.jsx', '.mjs', '.cjs',
+                    '.ts', '.tsx', '.cpp', '.cc', '.cxx', '.c', '.h', '.hpp', '.hxx', '.hh', '.cs', '.csproj',
+                    '.swift', '.swiftpm', '.go', '.rs', '.rlib', '.rb', '.rbw', '.rake', '.gemspec', '.php',
+                    '.php3', '.php4', '.php5', '.php7', '.php8', '.phtml', '.scala', '.sc', '.kt', '.kts',
+                    '.sh', '.bash', '.zsh', '.fish', '.ksh', '.ps1', '.psm1', '.psd1', '.bat', '.cmd', '.com',
+                    '.pl', '.pm', '.lua', '.r', '.rmd', '.rnotebook', '.jl', '.dart', '.elm', '.clj', '.cljs',
+                    '.cljc', '.edn', '.ex', '.exs', '.erl', '.hrl', '.hs', '.lhs', '.ml', '.mli', '.fs', '.fsi',
+                    '.fsx', '.pas', '.pp', '.asm', '.s', '.vb', '.vbs', '.vbproj', '.groovy', '.gradle'},
+            'markup': {'.md', '.markdown', '.rst', '.rest', '.adoc', '.asciidoc', '.textile', '.rdoc', '.org',
+                      '.wiki', '.mediawiki', '.mdown', '.mkd', '.tex', '.latex'},
+            'documents': {'.pdf', '.doc', '.docx', '.docm', '.odt', '.ott', '.rtf', '.pages', '.txt', '.text',
+                         '.wps', '.wpd'},
+            'spreadsheets': {'.xls', '.xlsx', '.xlsm', '.xlt', '.ods', '.ots', '.numbers', '.gnumeric', '.xlam',
+                            '.xltx', '.xltm'},
+            'presentations': {'.ppt', '.pptx', '.pptm', '.potx', '.odp', '.otp', '.key', '.gslides', '.pps', '.ppsx'},
+            'data': {'.protobuf', '.proto', '.avro', '.msgpack', '.cbor', '.bson', '.ion', '.s_expr'},
+            'databases': {'.sqlite', '.db', '.mdb', '.dbf', '.dbc', '.accdb', '.laccdb', '.ibd', '.frm', '.myd'},
+            'logs': {'.log', '.logs', '.trace', '.debug', '.out', '.syslog'},
+            'config': {'.conf', '.config', '.cfg', '.cnf', '.ini', '.inf', '.env', '.envrc', '.properties',
+                      '.gradle', '.dockerfile', '.docker-compose', '.compose', '.kubernetes', '.k8s', '.terraform',
+                      '.tf', '.tfvars', '.ansible', '.playbook', '.chef', '.recipe', '.puppet', '.pp', '.saltstack',
+                      '.sls', '.nix', '.vcxproj', '.csproj', '.fsproj', '.vbproj', '.targets', '.props', '.vimrc',
+                      '.vim', '.emacs', '.gitconfig', '.gitignore', '.gitattributes', '.editorconfig', '.eslintrc',
+                      '.prettierrc', '.stylelintrc', '.npmrc', '.yarnrc', '.bowerrc', '.htaccess', '.nginx', '.apache',
+                      '.httpd', '.bash_profile', '.bashrc', '.profile', '.zshrc', '.zsh_profile', '.fishrc',
+                      '.screenrc', '.tmuxconf'},
+            'web': {'.html', '.htm', '.xhtml', '.xml', '.xsd', '.xsl', '.xslt', '.json', '.jsonl', '.ndjson',
+                   '.yaml', '.yml', '.toml', '.csv', '.tsv', '.dsv', '.sql', '.css', '.scss', '.sass', '.less',
+                   '.vue', '.svelte', '.astro', '.qvp', '.pug', '.jade', '.handlebars', '.hbs', '.ejs', '.erb',
+                   '.haml', '.slim', '.blade', '.jinja', '.jinja2', '.liquid', '.mustache', '.twig', '.freemarker',
+                   '.ftl', '.velocity', '.vm'},
+            'media': {'.jpg', '.jpeg', '.jpe', '.png', '.gif', '.bmp', '.webp', '.svg', '.ico', '.tiff', '.tif'},
+            'archives': {'.tar', '.gz', '.gzip', '.tgz', '.bz2', '.bzip2', '.xz', '.z'},
+            'fonts': {'.otf', '.ttf', '.woff', '.woff2', '.eot', '.fon'},
+            'text': {'.txt', '.text', '.edcx', '.properties', '.m3u', '.m3u8', '.pls', '.sub', '.srt', '.ass',
+                    '.ssa', '.vtt'},
+        }
+        
+        # Add extensions based on enabled categories
+        if self.category_code:
+            filtered.update(category_extensions.get('code', set()))
+        if self.category_markup:
+            filtered.update(category_extensions.get('markup', set()))
+        if self.category_documents:
+            filtered.update(category_extensions.get('documents', set()))
+        if self.category_spreadsheets:
+            filtered.update(category_extensions.get('spreadsheets', set()))
+        if self.category_presentations:
+            filtered.update(category_extensions.get('presentations', set()))
+        if self.category_data:
+            filtered.update(category_extensions.get('data', set()))
+        if self.category_databases:
+            filtered.update(category_extensions.get('databases', set()))
+        if self.category_logs:
+            filtered.update(category_extensions.get('logs', set()))
+        if self.category_config:
+            filtered.update(category_extensions.get('config', set()))
+        if self.category_web:
+            filtered.update(category_extensions.get('web', set()))
+        if self.category_media:
+            filtered.update(category_extensions.get('media', set()))
+        if self.category_archives:
+            filtered.update(category_extensions.get('archives', set()))
+        if self.category_fonts:
+            filtered.update(category_extensions.get('fonts', set()))
+        if self.category_text:
+            filtered.update(category_extensions.get('text', set()))
+        
+        # If no categories selected, use all extensions
+        if not filtered:
+            filtered = self.supported_text_extensions
+        
+        return filtered
+    
     def print_colored(self, text, color_key='info', emoji=''):
         """Druckt Text mit Farben und Emojis (nur wenn verbose=True)."""
         if not self.verbose:
@@ -319,6 +428,62 @@ class FileSearchTool:
         color = self.colors.get(color_key, '')
         reset = self.colors.get('reset', '')
         print(f"{color}{emoji} {text}{reset}")
+    
+    def get_file_category(self, file_path: str) -> str:
+        """Bestimmt die Kategorie einer Datei basierend auf ihrer Extension."""
+        try:
+            import os
+            _, ext = os.path.splitext(file_path)
+            ext = ext.lower()
+            
+            # Category definitions (must match the ones in get_filtered_extensions)
+            category_extensions = {
+                'code': {'.py', '.pyc', '.pyo', '.pyd', '.java', '.class', '.jar', '.js', '.jsx', '.mjs', '.cjs',
+                        '.ts', '.tsx', '.cpp', '.cc', '.cxx', '.c', '.h', '.hpp', '.hxx', '.hh', '.cs', '.csproj',
+                        '.swift', '.swiftpm', '.go', '.rs', '.rlib', '.rb', '.rbw', '.rake', '.gemspec', '.php',
+                        '.php3', '.php4', '.php5', '.php7', '.php8', '.phtml', '.scala', '.sc', '.kt', '.kts',
+                        '.sh', '.bash', '.zsh', '.fish', '.ksh', '.ps1', '.psm1', '.psd1', '.bat', '.cmd', '.com',
+                        '.pl', '.pm', '.lua', '.r', '.rmd', '.rnotebook', '.jl', '.dart', '.elm', '.clj', '.cljs',
+                        '.cljc', '.edn', '.ex', '.exs', '.erl', '.hrl', '.hs', '.lhs', '.ml', '.mli', '.fs', '.fsi',
+                        '.fsx', '.pas', '.pp', '.asm', '.s', '.vb', '.vbs', '.vbproj', '.groovy', '.gradle'},
+                'markup': {'.md', '.markdown', '.rst', '.rest', '.adoc', '.asciidoc', '.textile', '.rdoc', '.org',
+                          '.wiki', '.mediawiki', '.mdown', '.mkd', '.tex', '.latex'},
+                'documents': {'.pdf', '.doc', '.docx', '.docm', '.odt', '.ott', '.rtf', '.pages', '.txt', '.text',
+                             '.wps', '.wpd'},
+                'spreadsheets': {'.xls', '.xlsx', '.xlsm', '.xlt', '.ods', '.ots', '.numbers', '.gnumeric', '.xlam',
+                                '.xltx', '.xltm'},
+                'presentations': {'.ppt', '.pptx', '.pptm', '.potx', '.odp', '.otp', '.key', '.gslides', '.pps', '.ppsx'},
+                'data': {'.protobuf', '.proto', '.avro', '.msgpack', '.cbor', '.bson', '.ion', '.s_expr'},
+                'databases': {'.sqlite', '.db', '.mdb', '.dbf', '.dbc', '.accdb', '.laccdb', '.ibd', '.frm', '.myd'},
+                'logs': {'.log', '.logs', '.trace', '.debug', '.out', '.syslog'},
+                'config': {'.conf', '.config', '.cfg', '.cnf', '.ini', '.inf', '.env', '.envrc', '.properties',
+                          '.gradle', '.dockerfile', '.docker-compose', '.compose', '.kubernetes', '.k8s', '.terraform',
+                          '.tf', '.tfvars', '.ansible', '.playbook', '.chef', '.recipe', '.puppet', '.pp', '.saltstack',
+                          '.sls', '.nix', '.vcxproj', '.csproj', '.fsproj', '.vbproj', '.targets', '.props', '.vimrc',
+                          '.vim', '.emacs', '.gitconfig', '.gitignore', '.gitattributes', '.editorconfig', '.eslintrc',
+                          '.prettierrc', '.stylelintrc', '.npmrc', '.yarnrc', '.bowerrc', '.htaccess', '.nginx', '.apache',
+                          '.httpd', '.bash_profile', '.bashrc', '.profile', '.zshrc', '.zsh_profile', '.fishrc',
+                          '.screenrc', '.tmuxconf'},
+                'web': {'.html', '.htm', '.xhtml', '.xml', '.xsd', '.xsl', '.xslt', '.json', '.jsonl', '.ndjson',
+                       '.yaml', '.yml', '.toml', '.csv', '.tsv', '.dsv', '.sql', '.css', '.scss', '.sass', '.less',
+                       '.vue', '.svelte', '.astro', '.qvp', '.pug', '.jade', '.handlebars', '.hbs', '.ejs', '.erb',
+                       '.haml', '.slim', '.blade', '.jinja', '.jinja2', '.liquid', '.mustache', '.twig', '.freemarker',
+                       '.ftl', '.velocity', '.vm'},
+                'media': {'.jpg', '.jpeg', '.jpe', '.png', '.gif', '.bmp', '.webp', '.svg', '.ico', '.tiff', '.tif'},
+                'archives': {'.tar', '.gz', '.gzip', '.tgz', '.bz2', '.bzip2', '.xz', '.z'},
+                'fonts': {'.otf', '.ttf', '.woff', '.woff2', '.eot', '.fon'},
+                'text': {'.txt', '.text', '.edcx', '.properties', '.m3u', '.m3u8', '.pls', '.sub', '.srt', '.ass',
+                        '.ssa', '.vtt'},
+            }
+            
+            # Find category for extension
+            for category, extensions in category_extensions.items():
+                if ext in extensions:
+                    return category
+            
+            return 'other'
+        except Exception:
+            return 'other'
     
     def print_separator(self, char='═', length=80, color_key='header'):
         """Druckt eine farbige Trennlinie."""
@@ -474,9 +639,12 @@ class FileSearchTool:
     
     def is_text_file(self, file_path):
         """Prüft, ob eine Datei als Textdatei behandelt werden kann."""
+        # Get filtered extensions based on category settings
+        filtered_extensions = self.get_filtered_extensions()
+        
         # Prüfe Dateierweiterung
         extension = Path(file_path).suffix.lower()
-        if extension in self.supported_text_extensions:
+        if extension in filtered_extensions:
             return True
         
         # Prüfe MIME-Type
@@ -846,6 +1014,19 @@ class FileSearchTool:
             lines_to_search = self.extract_text_from_csv(file_path)
         elif file_ext == '.log':
             lines_to_search = self.extract_text_from_log(file_path)
+        elif self.use_ocr and file_ext in ['.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tiff', '.webp']:
+            # Try OCR extraction for image files
+            try:
+                if self.ocr_handler:
+                    ocr_text = self.ocr_handler.extract_text(file_path)
+                    if ocr_text and ocr_text.strip():
+                        # Split OCR text into lines
+                        for line_num, line in enumerate(ocr_text.split('\n'), 1):
+                            line_content = line.strip()
+                            if line_content:
+                                lines_to_search.append((line_num, f"[OCR] {line_content}"))
+            except Exception:
+                pass  # OCR extraction failed, skip
         else:
             # Standard-Textdatei Behandlung
             encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
@@ -1034,10 +1215,11 @@ class FileSearchTool:
             try:
                 with ProcessPoolExecutor(max_workers=self.max_workers) as executor:
                     # Erstelle Worker-Prozesse
+                    filtered_extensions = self.get_filtered_extensions()
                     future_to_batch = {
                         executor.submit(self.process_file_batch_static, batch, self.search_terms, 
                                       self.search_mode, self.case_sensitive, self.use_regex,
-                                      self.supported_text_extensions, self.max_file_size): batch
+                                      filtered_extensions, self.max_file_size): batch
                         for batch in file_batches
                     }
                     

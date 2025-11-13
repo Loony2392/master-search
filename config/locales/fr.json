@@ -58,5 +58,34 @@
   "copy_path": "Copier dans le presse-papiers",
   "regex_mode": "Expressions régulières",
   "options": "Options",
-  "professional_search": "Outil Professionnel de Recherche de Fichiers"
+  "professional_search": "Outil Professionnel de Recherche de Fichiers",
+  
+  "ocr": {
+    "install_button": "🖼️ Installer OCR",
+    "not_installed": "🖼️ OCR: Non installé",
+    "in_images": "🖼️ OCR dans les Images",
+    "tooltip": "Rechercher du texte dans les images avec OCR\n(Beaucoup plus lent quand activé)",
+    "not_available_tooltip": "🖼️ Moteur OCR non installé\n\nCliquez sur 'Installer OCR'\npour une installation automatique",
+    "install_title": "Installation OCR",
+    "install_description": "Installe automatiquement EasyOCR et PaddleOCR",
+    "installing": "🎨 Installation OCR...",
+    "install_complete": "✅ OCR Prêt",
+    "install_success": "OCR avec {engine} est maintenant disponible!\n\nVous pouvez activer OCR dans la section des catégories de fichiers.",
+    "install_failed": "⚠️ OCR non disponible",
+    "install_error": "L'installation OCR a échoué, mais la recherche fonctionne normalement.",
+    "category_code": "Langages de Programmation & Scripts",
+    "category_markup": "Balisage & Documentation",
+    "category_documents": "Documents Office & Edition",
+    "category_spreadsheets": "Feuilles de Calcul",
+    "category_presentations": "Présentations & Diapositives",
+    "category_data": "Formats de Données",
+    "category_databases": "Bases de Données",
+    "category_logs": "Journaux & Fichiers Système",
+    "category_config": "Fichiers de Configuration",
+    "category_web": "Développement Web",
+    "category_media": "Images, Audio & Vidéo (100+ formats)",
+    "category_archives": "Archives & Compression",
+    "category_fonts": "Polices",
+    "category_text": "Fichiers Texte"
+  }
 }

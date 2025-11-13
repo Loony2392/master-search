@@ -79,6 +79,31 @@ class MSIBuilder:
         print("✅ All dependencies satisfied")
         return True
     
+    def install_ocr_dependencies(self):
+        """Install OCR engines into the build environment."""
+        print("\n🎨 Installing OCR Engines...")
+        
+        try:
+            # Run OCR setup script
+            ocr_setup = self.project_root / 'scripts' / 'setup_ocr.py'
+            if ocr_setup.exists():
+                cmd = [sys.executable, str(ocr_setup)]
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+                
+                if result.returncode == 0:
+                    print("✅ OCR engines installed successfully")
+                    return True
+                else:
+                    print("⚠️  OCR installation had issues (non-critical)")
+                    print(result.stderr[:500] if result.stderr else "No error details")
+                    return True  # Don't fail the build
+            else:
+                print("⚠️  OCR setup script not found (skipping)")
+                return True
+        except Exception as e:
+            print(f"⚠️  OCR installation skipped: {e}")
+            return True  # Don't fail the build
+    
     def clean_previous_builds(self):
         """Clean previous build artifacts."""
         print("\n🧹 Cleaning previous builds...")
@@ -334,6 +359,9 @@ setup(
             
             # Clean previous builds
             self.clean_previous_builds()
+            
+            # Install OCR dependencies
+            self.install_ocr_dependencies()
             
             # Build executables
             if not self.build_executables():

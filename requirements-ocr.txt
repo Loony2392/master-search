@@ -1,0 +1,40 @@
+# Master Search - OCR Dependencies
+# ==================================
+# Optional OCR engines for image text recognition
+# These are bundled with macOS and Windows builds automatically
+# On Linux, users may need to install system dependencies separately
+
+# Primary OCR Engine (Pure Python, Cross-Platform)
+# ================================================
+# EasyOCR - Recommended for all platforms
+# Fast, accurate, doesn't require system binaries
+easyocr>=1.7.0
+
+# Secondary OCR Engine (High Accuracy Alternative)
+# ==================================================
+# PaddleOCR - Alternative with excellent accuracy
+# Pure Python, good for Asian languages
+paddleocr>=2.7.0
+
+# Optional: Tesseract OCR (requires system binary)
+# ==================================================
+# pytesseract>=0.3.10
+# Note: On Windows/macOS, install tesseract binary separately
+# Windows: https://github.com/UB-Mannheim/tesseract/releases
+# macOS: brew install tesseract
+# Linux: sudo apt install tesseract-ocr (or equivalent)
+
+# Dependencies for OCR Engines
+# ============================
+# opencv-python>=4.8.0  # Often included by easyocr/paddleocr
+# numpy>=1.21.0  # Included by easyocr/paddleocr
+# torch>=1.9.0  # Included by easyocr
+
+# Notes:
+# ======
+# 1. EasyOCR is the recommended primary engine
+# 2. PaddleOCR is a lightweight alternative
+# 3. Both engines are pure Python and cross-platform
+# 4. Installation adds ~500MB to bundle size (models cached locally)
+# 5. First run downloads language models (~200MB for default)
+# 6. Subsequent runs use cached models (very fast)

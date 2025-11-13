@@ -45,6 +45,7 @@ DEFAULT_SETTINGS = {
     "category_archives": True,
     "category_fonts": True,
     "category_text": True,
+    "use_ocr": False,
 }
 
 

@@ -58,5 +58,34 @@
   "copy_path": "In Zwischenablage kopieren",
   "regex_mode": "Regex",
   "options": "Optionen",
-  "professional_search": "Professionelles Dateisuche-Tool"
+  "professional_search": "Professionelles Dateisuche-Tool",
+  
+  "ocr": {
+    "install_button": "🖼️ OCR installieren",
+    "not_installed": "🖼️ OCR: Nicht installiert",
+    "in_images": "🖼️ OCR in Bildern",
+    "tooltip": "Durchsucht Bilder nach Text mittels OCR\n(Wird bei Aktivierung deutlich langsamer)",
+    "not_available_tooltip": "🖼️ OCR Engine nicht installiert\n\nKlicken Sie auf 'OCR installieren'\nfür automatische Installation",
+    "install_title": "OCR Installation",
+    "install_description": "Installiert automatisch EasyOCR und PaddleOCR",
+    "installing": "🎨 Installiere OCR...",
+    "install_complete": "✅ OCR Ready",
+    "install_success": "OCR mit {engine} ist jetzt verfügbar!\n\nSie können OCR in den Dateikategorien aktivieren.",
+    "install_failed": "⚠️ OCR nicht verfügbar",
+    "install_error": "OCR-Installation ist fehlgeschlagen, aber die Suche funktioniert normal.",
+    "category_code": "Programmiersprachen & Scripts",
+    "category_markup": "Markup & Dokumentation",
+    "category_documents": "Office & Publishing Dokumente",
+    "category_spreadsheets": "Tabellenkalkulationen",
+    "category_presentations": "Präsentationen & Folien",
+    "category_data": "Datenformate",
+    "category_databases": "Datenbanken",
+    "category_logs": "Logs & Systemdateien",
+    "category_config": "Konfigurationsdateien",
+    "category_web": "Web-Entwicklung",
+    "category_media": "Bilder, Audio & Video (100+ Formate)",
+    "category_archives": "Archive & Komprimierung",
+    "category_fonts": "Schriftarten",
+    "category_text": "Textdateien"
+  }
 }

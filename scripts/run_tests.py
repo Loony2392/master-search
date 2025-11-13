@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Master Search - Lokaler Test Runner
-Führt alle Tests mit Report aus
+Master Search - Local Test Runner
+Runs all tests with report
 
 Author: Loony2392
 Email: info@loony-tech.de
@@ -21,7 +21,7 @@ if sys.platform == 'win32':
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
     sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
 
-# Farben für Terminal-Output
+# Terminal output colors
 class Colors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'

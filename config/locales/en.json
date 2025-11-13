@@ -58,5 +58,34 @@
   "copy_path": "Copy to clipboard",
   "regex_mode": "Regex",
   "options": "Options",
-  "professional_search": "Professional File Search Tool"
+  "professional_search": "Professional File Search Tool",
+  
+  "ocr": {
+    "install_button": "🖼️ Install OCR",
+    "not_installed": "🖼️ OCR: Not installed",
+    "in_images": "🖼️ OCR in Images",
+    "tooltip": "Search images for text using OCR\n(Significantly slower when enabled)",
+    "not_available_tooltip": "🖼️ OCR engine not installed\n\nClick 'Install OCR'\nfor automatic installation",
+    "install_title": "OCR Installation",
+    "install_description": "Automatically installs EasyOCR and PaddleOCR",
+    "installing": "🎨 Installing OCR...",
+    "install_complete": "✅ OCR Ready",
+    "install_success": "OCR with {engine} is now available!\n\nYou can enable OCR in the file categories section.",
+    "install_failed": "⚠️ OCR not available",
+    "install_error": "OCR installation failed, but search functions normally.",
+    "category_code": "Programming Languages & Scripts",
+    "category_markup": "Markup & Documentation",
+    "category_documents": "Office & Publishing Documents",
+    "category_spreadsheets": "Spreadsheets",
+    "category_presentations": "Presentations & Slides",
+    "category_data": "Data Formats",
+    "category_databases": "Databases",
+    "category_logs": "Logs & System Files",
+    "category_config": "Configuration Files",
+    "category_web": "Web Development",
+    "category_media": "Images, Audio & Video (100+ formats)",
+    "category_archives": "Archives & Compression",
+    "category_fonts": "Fonts",
+    "category_text": "Text Files"
+  }
 }
