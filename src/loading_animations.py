@@ -286,21 +286,18 @@ class ModernProgressBar:
         if pulse < 0.05:
             return  # Completely faded out
         
-        # Calculate opacity-like effect using stipple patterns
+        # Calculate opacity-like effect using stipple patterns (macOS compatible)
         if pulse < 0.2:
-            stipple_far = "gray87"
+            stipple_far = "gray75"
             stipple_med = "gray75"
         elif pulse < 0.4:
-            stipple_far = "gray75"
-            stipple_med = "gray62"
-        elif pulse < 0.6:
             stipple_far = "gray50"
-            stipple_med = "gray37"
-        elif pulse < 0.8:
-            stipple_far = "gray37"
+            stipple_med = "gray50"
+        elif pulse < 0.6:
+            stipple_far = "gray25"
             stipple_med = "gray25"
         else:
-            stipple_far = "gray25"
+            stipple_far = "gray12"
             stipple_med = "gray12"
         
         # Far outer glow (very subtle, pulsing with intensity)
