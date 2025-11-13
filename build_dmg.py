@@ -348,6 +348,9 @@ setup(
         except OSError:
             print("   ⚠️  Could not create Applications symlink")
         
+        # Copy background image (icon.svg or PNG version)
+        self.copy_dmg_background(dmg_temp)
+        
         # Add README or other files
         readme_content = f"""# {self.app_name} v{self.version}
 
@@ -373,6 +376,26 @@ Version: {self.version}
         print("   Created README.txt")
         
         return dmg_temp
+    
+    def copy_dmg_background(self, dmg_temp):
+        """Copy background image to DMG. Try to use PNG version of icon."""
+        # Create hidden folder for background image (macOS convention)
+        bg_folder = dmg_temp / '.background'
+        bg_folder.mkdir(exist_ok=True)
+        
+        # Try to use the largest icon PNG as background
+        icon_256_path = self.project_root / 'media' / 'master_search_icon_256x256.png'
+        bg_image_path = bg_folder / 'background.png'
+        
+        if icon_256_path.exists():
+            try:
+                shutil.copy2(icon_256_path, bg_image_path)
+                print("   ✅ Copied background image (256x256 PNG)")
+            except Exception as e:
+                print(f"   ⚠️  Could not copy background image: {e}")
+        else:
+            print(f"   ℹ️  Background image not found at {icon_256_path}")
+
     
     def create_dmg(self, dmg_temp):
         """Create the final DMG file."""
@@ -476,7 +499,7 @@ Version: {self.version}
         """Customize DMG appearance with AppleScript."""
         print("   Customizing DMG appearance...")
         
-        # AppleScript for DMG customization
+        # AppleScript for DMG customization with background image
         applescript = f'''
         tell application "Finder"
             tell disk "{self.app_name}"
@@ -484,13 +507,19 @@ Version: {self.version}
                 set current view of container window to icon view
                 set toolbar visible of container window to false
                 set statusbar visible of container window to false
-                set the bounds of container window to {{100, 100, 600, 400}}
+                set the bounds of container window to {{100, 100, 700, 500}}
                 set viewOptions to the icon view options of container window
                 set arrangement of viewOptions to not arranged
                 set icon size of viewOptions to 128
+                
+                -- Set background image if it exists
+                try
+                    set background picture of viewOptions to file ".background:background.png"
+                end try
+                
                 delay 1
-                set position of item "{self.app_name}.app" of container window to {{150, 200}}
-                set position of item "Applications" of container window to {{350, 200}}
+                set position of item "{self.app_name}.app" of container window to {{150, 300}}
+                set position of item "Applications" of container window to {{450, 300}}
                 close
             end tell
         end tell
@@ -499,7 +528,7 @@ Version: {self.version}
         # Execute AppleScript
         try:
             subprocess.run(['osascript', '-e', applescript], check=True, capture_output=True)
-            print("   ✅ DMG appearance customized")
+            print("   ✅ DMG appearance customized with background")
         except subprocess.CalledProcessError as e:
             print(f"   ⚠️  AppleScript failed: {e}")
     
