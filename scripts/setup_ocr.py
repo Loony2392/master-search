@@ -21,7 +21,7 @@ from pathlib import Path
 def install_ocr_dependencies():
     """Install OCR dependencies into current Python environment"""
     
-    print("🎨 Installing OCR Dependencies...")
+    print("[OCR] Installing OCR Dependencies...")
     print("=" * 60)
     
     # List of OCR packages to install
@@ -31,7 +31,7 @@ def install_ocr_dependencies():
     ]
     
     for package in packages:
-        print(f"\n📦 Installing {package}...")
+        print(f"\n[PKG] Installing {package}...")
         try:
             result = subprocess.run(
                 [sys.executable, "-m", "pip", "install", "--quiet", package],
@@ -41,18 +41,18 @@ def install_ocr_dependencies():
             )
             
             if result.returncode == 0:
-                print(f"✅ {package} installed successfully")
+                print(f"[OK] {package} installed successfully")
             else:
-                print(f"⚠️  {package} installation had issues:")
+                print(f"[WARN] {package} installation had issues:")
                 if result.stderr:
                     print(result.stderr[:200])  # Print first 200 chars of error
         except subprocess.TimeoutExpired:
-            print(f"⏱️  {package} installation timed out (skipping)")
+            print(f"[TIMEOUT] {package} installation timed out (skipping)")
         except Exception as e:
-            print(f"⚠️  Failed to install {package}: {e}")
+            print(f"[WARN] Failed to install {package}: {e}")
     
     print("\n" + "=" * 60)
-    print("✅ OCR dependency installation complete!")
+    print("[OK] OCR dependency installation complete!")
     print("\nNotes:")
     print("  - First OCR use will download language models (~200MB)")
     print("  - Models are cached locally for fast subsequent runs")
@@ -64,8 +64,8 @@ if __name__ == "__main__":
     try:
         install_ocr_dependencies()
     except KeyboardInterrupt:
-        print("\n\n⚠️  Installation cancelled by user")
+        print("\n\n[WARN] Installation cancelled by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n\n❌ Installation failed: {e}")
+        print(f"\n\n[ERROR] Installation failed: {e}")
         sys.exit(1)

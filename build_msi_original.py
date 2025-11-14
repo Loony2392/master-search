@@ -105,48 +105,59 @@ class MSIBuilder:
             return True  # Don't fail the build
     
     def clean_previous_builds(self):
-        """Clean previous build artifacts aggressively."""
+        """Clean previous build artifacts."""
         print("\n🧹 Cleaning previous builds...")
         
-        # Clean dist folder
-        if self.dist_folder.exists():
-            print(f"   Removing {self.dist_folder.name}")
-            try:
-                shutil.rmtree(self.dist_folder, ignore_errors=True)
-            except Exception as e:
-                print(f"   Warning: {e}")
-        
-        # Aggressively clean build folder - rename instead of delete
-        if self.build_folder.exists():
-            print(f"   Removing {self.build_folder.name}")
-            try:
-                # Try to remove it multiple times with delay
-                for attempt in range(3):
-                    try:
-                        shutil.rmtree(self.build_folder, ignore_errors=True)
-                        break
-                    except Exception:
-                        import time
-                        time.sleep(1)
-                        
-                # If still exists, rename it out of the way
-                if self.build_folder.exists():
-                    import time
-                    renamed = self.project_root / f'build_old_{int(time.time())}'
-                    self.build_folder.rename(renamed)
-                    print(f"   Renamed old build to {renamed.name}")
-            except Exception as e:
-                print(f"   Warning: Could not clean build: {e}")
+        for folder in [self.dist_folder, self.build_folder]:
+            if folder.exists():
+                print(f"   Removing {folder.name}")
+                shutil.rmtree(folder, ignore_errors=True)
         
         self.dist_folder.mkdir(parents=True, exist_ok=True)
         
         print("✅ Build directories cleaned")
     
     def build_executables(self):
-        """Skip PyInstaller - let cx_Freeze handle everything."""
-        print("\n🏗️  Skipping PyInstaller (cx_Freeze will handle everything)...")
-        print("   ✅ Ready for direct cx_Freeze MSI build")
-        return True
+        """Build GUI and CLI executables using PyInstaller."""
+        print("\n🏗️  Building executables with PyInstaller...")
+        
+        try:
+            # Build GUI
+            print("   Building GUI executable...")
+            result = subprocess.run(
+                [sys.executable, '-m', 'PyInstaller', str(self.scripts_dir / 'gui.spec')],
+                cwd=str(self.project_root),
+                capture_output=True,
+                text=True,
+                check=False
+            )
+            
+            if result.returncode != 0:
+                print(f"❌ GUI build failed: {result.stderr}")
+                return False
+            
+            print("   ✅ GUI executable created")
+            
+            # Build CLI
+            print("   Building CLI executable...")
+            result = subprocess.run(
+                [sys.executable, '-m', 'PyInstaller', str(self.scripts_dir / 'cli.spec')],
+                cwd=str(self.project_root),
+                capture_output=True,
+                text=True,
+                check=False
+            )
+            
+            if result.returncode != 0:
+                print(f"❌ CLI build failed: {result.stderr}")
+                return False
+            
+            print("   ✅ CLI executable created")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error building executables: {e}")
+            return False
     
     def create_msi_setup(self):
         """Create cx_Freeze setup.py for MSI."""
@@ -208,14 +219,13 @@ setup(
         return setup_file
     
     def build_msi(self, setup_file):
-        """Build MSI installer using cx_Freeze bdist_msi."""
+        """Build MSI installer using cx_Freeze."""
         print("\n🔨 Building MSI installer with cx_Freeze...")
         
         try:
-            # Use bdist_msi command - the proper way to create MSI
             cmd = [sys.executable, str(setup_file), 'bdist_msi']
             
-            print(f"   This may take several minutes...")
+            print(f"   Running: {' '.join(cmd)}")
             print(f"   Working directory: {self.project_root}")
             
             result = subprocess.run(
@@ -223,72 +233,53 @@ setup(
                 cwd=str(self.project_root),
                 capture_output=True,
                 text=True,
-                timeout=1200,  # 20 minute timeout
                 check=False
             )
             
             if result.returncode != 0:
                 print(f"❌ MSI build failed with exit code {result.returncode}")
-                if result.stderr:
-                    print("Error:", result.stderr[-1000:] if len(result.stderr) > 1000 else result.stderr)
+                print("STDERR:", result.stderr[-500:] if len(result.stderr) > 500 else result.stderr)
                 return False
             
-            print("✅ MSI build completed")
+            print("✅ MSI builder completed")
             
             # Find and move the generated MSI
-            return self.find_and_move_msi()
+            return self.move_msi_to_dist()
             
-        except subprocess.TimeoutExpired:
-            print("❌ Build timed out (>20 minutes)")
-            return False
         except Exception as e:
             print(f"❌ Error building MSI: {e}")
-            import traceback
-            traceback.print_exc()
             return False
     
-    def find_and_move_msi(self):
-        """Find generated MSI and move it to releases/windows."""
+    def move_msi_to_dist(self):
+        """Find generated MSI and move it to dist folder."""
         print("   Locating generated MSI file...")
         
         try:
-            # Search in dist folder (default cx_Freeze output)
-            dist_folder = self.project_root / 'dist'
-            if dist_folder.exists():
-                msi_files = list(dist_folder.glob('*.msi'))
-                if msi_files:
-                    src = msi_files[0]
-                    dst = self.dist_folder / self.msi_filename
-                    shutil.move(str(src), str(dst))
-                    size_mb = dst.stat().st_size / (1024 * 1024)
-                    print(f"   ✅ MSI moved to {self.msi_filename} ({size_mb:.1f} MB)")
-                    return True
-            
-            # Search in build folder
+            # Search for MSI in build folder
             msi_files = list(self.build_folder.glob('**/*.msi'))
+            
             if msi_files:
                 src = msi_files[0]
                 dst = self.dist_folder / self.msi_filename
                 shutil.move(str(src), str(dst))
-                size_mb = dst.stat().st_size / (1024 * 1024)
-                print(f"   ✅ MSI moved to {self.msi_filename} ({size_mb:.1f} MB)")
+                print(f"   ✅ MSI moved to {self.msi_filename}")
                 return True
             
             # Check if already in dist with different name
             msi_files = list(self.dist_folder.glob('*.msi'))
             if msi_files:
                 src = msi_files[0]
-                if src.name != self.msi_filename:
-                    dst = self.dist_folder / self.msi_filename
+                dst = self.dist_folder / self.msi_filename
+                if src != dst:
                     src.rename(dst)
-                    print(f"   ✅ MSI found and renamed to {self.msi_filename}")
+                print(f"   ✅ MSI found and renamed to {self.msi_filename}")
                 return True
             
-            print("❌ No MSI file found in any expected location")
+            print("❌ No MSI file found in build or dist")
             return False
             
         except Exception as e:
-            print(f"❌ Error locating MSI: {e}")
+            print(f"❌ Error moving MSI: {e}")
             return False
     
     def create_checksum(self):
@@ -301,8 +292,8 @@ setup(
             msi_path = self.dist_folder / self.msi_filename
             
             if not msi_path.exists():
-                print(f"⚠️  MSI file not found: {msi_path}")
-                return True  # Don't fail the build
+                print(f"❌ MSI file not found: {msi_path}")
+                return False
             
             # Calculate SHA256
             sha256_hash = hashlib.sha256()
@@ -322,8 +313,8 @@ setup(
             return True
             
         except Exception as e:
-            print(f"⚠️  Error creating checksum: {e}")
-            return True  # Don't fail the build
+            print(f"❌ Error creating checksum: {e}")
+            return False
     
     def show_results(self):
         """Display build results."""
