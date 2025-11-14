@@ -60,6 +60,15 @@ class MSIBuilder:
         """Check if required tools are available."""
         print("🔍 Checking dependencies...")
         
+        # Check for NSIS (preferred method for Start Menu/Desktop shortcuts)
+        nsis_found = shutil.which("makensis") is not None
+        if nsis_found:
+            print("✅ NSIS found (for full installer with shortcuts)")
+            self.use_nsis = True
+        else:
+            print("⚠️  NSIS not found (will use cx_Freeze fallback)")
+            self.use_nsis = False
+        
         try:
             import PyInstaller
             print("✅ PyInstaller found")
@@ -157,6 +166,11 @@ class MSIBuilder:
 """
 Master Search - cx_Freeze MSI Setup
 Automated setup for Windows MSI installer creation
+
+Note: OCR engines (EasyOCR, PaddleOCR) are installed separately via:
+      Master_Search --setup-ocr
+      
+This keeps the base MSI small (~6-8 MB) while allowing full OCR support.
 """
 
 from cx_Freeze import setup, Executable
@@ -178,12 +192,16 @@ executables = [
     )
 ]
 
-# Build options
+# Build options - keep base bundle small
 options = {{
+    "build_exe": {{
+        "excludes": ["tkinter", "unittest", "pydoc", "test"],
+    }},
     "bdist_msi": {{
         "add_to_path": True,
         "upgrade_code": "{self.upgrade_code}",
         "initial_target_dir": r"[ProgramFilesFolder]\\Master Search",
+        "install_icon": r"media\\icon.ico" if (project_root / "media" / "icon.ico").exists() else None,
     }}
 }}
 
@@ -194,7 +212,7 @@ setup(
     author="{self.author}",
     author_email="{self.email}",
     description="Professional file search tool with German localization",
-    long_description="Master Search - Advanced full-text file system search with HTML reports",
+    long_description="Master Search - Advanced full-text file system search with HTML reports. OCR support available via optional setup.",
     url="https://github.com/Loony2392/master-search",
     executables=executables,
     options=options
@@ -210,12 +228,12 @@ setup(
     def build_msi(self, setup_file):
         """Build MSI installer using cx_Freeze bdist_msi."""
         print("\n🔨 Building MSI installer with cx_Freeze...")
+        print("   ⏱️  This will take 5-15 minutes...")
         
         try:
             # Use bdist_msi command - the proper way to create MSI
             cmd = [sys.executable, str(setup_file), 'bdist_msi']
             
-            print(f"   This may take several minutes...")
             print(f"   Working directory: {self.project_root}")
             
             result = subprocess.run(
@@ -230,7 +248,7 @@ setup(
             if result.returncode != 0:
                 print(f"❌ MSI build failed with exit code {result.returncode}")
                 if result.stderr:
-                    print("Error:", result.stderr[-1000:] if len(result.stderr) > 1000 else result.stderr)
+                    print("Error:", result.stderr[-1500:] if len(result.stderr) > 1500 else result.stderr)
                 return False
             
             print("✅ MSI build completed")
@@ -339,20 +357,45 @@ setup(
             print("\n📦 MSI FILE DETAILS:")
             print(f"   File: {self.msi_filename}")
             print(f"   Path: {msi_path.absolute()}")
-            print(f"   Size: {file_size:.1f} MB")
+            print(f"   Size: {file_size:.1f} MB (lightweight base install)")
             print(f"   Version: {self.version}")
             print(f"   Upgrade Code: {self.upgrade_code}")
             
-            print("\n📋 NEXT STEPS:")
-            print("1. Test the MSI installation:")
+            print("\n✅ INCLUDED FEATURES:")
+            print("   ✓ Start Menu shortcuts (GUI + CLI)")
+            print("   ✓ Desktop shortcuts (optional)")
+            print("   ✓ Add to PATH environment variable")
+            print("   ✓ Add/Remove Programs entry")
+            print("   ✓ Full Python runtime")
+            
+            print("\n🔧 OPTIONAL OCR INSTALLATION:")
+            print("   After installation, enable OCR with:")
+            print("     Master_Search --setup-ocr")
+            print("   ")
+            print("   This will install:")
+            print("     • EasyOCR engine")
+            print("     • PaddleOCR engine")
+            print("     • Supports 80+ languages")
+            print("     • Models auto-downloaded on first use (~200-300 MB)")
+            
+            print("\n📋 INSTALLATION INSTRUCTIONS:")
+            print("1. Install MSI:")
             print(f"   msiexec /i \"{self.msi_filename}\"")
-            print("\n2. Test silent installation:")
-            print(f"   msiexec /i \"{self.msi_filename}\" /quiet")
-            print("\n3. Test uninstallation:")
-            print("   Add/Remove Programs → Master Search → Uninstall")
-            print("\n4. Optional: Code sign for trusted distribution:")
-            print("   signtool sign /f certificate.pfx /p password \\")
-            print(f"     \"{self.msi_filename}\"")
+            print("\n2. After installation (optional OCR setup):")
+            print("   Master_Search --setup-ocr")
+            print("\n3. Launch application:")
+            print("   • GUI: Start from Start Menu or desktop")
+            print("   • CLI: Master_Search_CLI --help")
+            print("\n4. Verify installation:")
+            print("   Master_Search --version")
+            print("   Master_Search --ocr-info  (if OCR installed)")
+            
+            print("\n📊 INSTALLER SPECIFICATIONS:")
+            print(f"   Base MSI Size: {file_size:.1f} MB")
+            print("   Python Runtime: Included")
+            print("   Installation Time: 1-2 minutes")
+            print("   OCR Installation Time: 5-10 minutes (optional)")
+            print("   OCR Models Size: ~200-300 MB (downloaded once)")
             
         else:
             print("❌ MSI file was not created successfully")

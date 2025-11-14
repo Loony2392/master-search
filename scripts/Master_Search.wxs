@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <!-- Master Search MSI Installer Configuration -->
+    <!-- This WiX configuration creates Start Menu and Desktop shortcuts -->
+    
+    <Product 
+        Id="*" 
+        Name="Master Search" 
+        Language="1031" 
+        Version="2025.11.20.0" 
+        Manufacturer="LOONY-TECH"
+        UpgradeCode="3F692526-948B-4B39-BF5F-1C3FD99FC7F4">
+        
+        <Package 
+            InstallerVersion="200" 
+            Compressed="yes" 
+            Platform="x64"
+            Description="Master Search - Professional file search tool"/>
+        
+        <Media Id="1" Cabinet="Master_Search.cab" EmbedCab="yes"/>
+        
+        <!-- Installation directory structure -->
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="ProgramFilesFolder">
+                <Directory Id="INSTALLFOLDER" Name="Master Search"/>
+            </Directory>
+            
+            <!-- Start Menu folder -->
+            <Directory Id="ProgramMenuFolder">
+                <Directory Id="ApplicationProgramsFolder" Name="Master Search"/>
+            </Directory>
+            
+            <!-- Desktop -->
+            <Directory Id="DesktopFolder" Name="Desktop"/>
+        </Directory>
+        
+        <!-- Feature: Main application -->
+        <Feature Id="ProductFeature" Title="Master Search" Level="1">
+            <ComponentRef Id="MainExecutable"/>
+            <ComponentRef Id="CLIExecutable"/>
+            <ComponentRef Id="StartMenuShortcut"/>
+            <ComponentRef Id="DesktopShortcut"/>
+        </Feature>
+        
+        <!-- Components -->
+        <DirectoryRef Id="INSTALLFOLDER">
+            <!-- GUI Executable -->
+            <Component Id="MainExecutable" Guid="*">
+                <File Id="GUI_EXE" Source="Master_Search.exe" KeyPath="yes"/>
+            </Component>
+            
+            <!-- CLI Executable -->
+            <Component Id="CLIExecutable" Guid="*">
+                <File Id="CLI_EXE" Source="MasterSearch_CLI.exe" KeyPath="yes"/>
+            </Component>
+        </DirectoryRef>
+        
+        <!-- Start Menu Shortcut -->
+        <DirectoryRef Id="ApplicationProgramsFolder">
+            <Component Id="StartMenuShortcut" Guid="*">
+                <Shortcut 
+                    Id="StartMenuGuiShortcut"
+                    Name="Master Search"
+                    Description="Professional file search tool"
+                    Target="[INSTALLFOLDER]Master_Search.exe"
+                    WorkingDirectory="INSTALLFOLDER"/>
+                <RemoveFolder Id="RemoveApplicationProgramsFolder" On="uninstall"/>
+                <RegistryValue 
+                    Root="HKCU" 
+                    Key="Software\Microsoft\Windows\CurrentVersion\Run"
+                    Name="Master Search" 
+                    Type="string" 
+                    Value="[INSTALLFOLDER]Master_Search.exe"
+                    Transitive="yes"/>
+            </Component>
+        </DirectoryRef>
+        
+        <!-- Desktop Shortcut -->
+        <DirectoryRef Id="DesktopFolder">
+            <Component Id="DesktopShortcut" Guid="*">
+                <Shortcut 
+                    Id="DesktopGuiShortcut"
+                    Name="Master Search"
+                    Description="Professional file search tool"
+                    Target="[INSTALLFOLDER]Master_Search.exe"
+                    WorkingDirectory="INSTALLFOLDER"/>
+                <RegistryValue 
+                    Root="HKCU" 
+                    Key="Software\Master Search\Desktop"
+                    Name="Installed" 
+                    Type="integer" 
+                    Value="1"
+                    Transitive="yes"/>
+            </Component>
+        </DirectoryRef>
+        
+        <!-- UI Setup -->
+        <UIRef Id="WixUI_InstallDir"/>
+        <WixVariable Id="WixUILicenseRtf" Value="LICENSE.rtf"/>
+        <WixVariable Id="WixUIBannerBmp" Value="banner.bmp"/>
+        <WixVariable Id="WixUIDialogBmp" Value="dialog.bmp"/>
+        
+        <!-- Custom Actions for PATH -->
+        <SetProperty Id="PATH" Before="InstallInitialize" Value="[INSTALLFOLDER];$PATH"/>
+        
+    </Product>
+</Wix>
