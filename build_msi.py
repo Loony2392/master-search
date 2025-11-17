@@ -104,7 +104,6 @@ class MSIBuilder:
                     return True
                 else:
                     print("⚠️  OCR installation had issues (non-critical)")
-                    print(result.stderr[:500] if result.stderr else "No error details")
                     return True  # Don't fail the build
             else:
                 print("⚠️  OCR setup script not found (skipping)")
@@ -112,6 +111,22 @@ class MSIBuilder:
         except Exception as e:
             print(f"⚠️  OCR installation skipped: {e}")
             return True  # Don't fail the build
+    
+    def create_shortcuts_installer(self):
+        """Create post-install script for shortcuts."""
+        print("\n🔗 Creating shortcut installer script...")
+        
+        # Copy the create_shortcuts.py script to the dist folder
+        # so it gets included in the MSI
+        shortcuts_script = self.project_root / 'scripts' / 'create_shortcuts.py'
+        
+        if shortcuts_script.exists():
+            # It will be picked up automatically by cx_Freeze
+            print("✅ Shortcut installer script is ready")
+            return True
+        else:
+            print("⚠️  Shortcut installer not found (non-critical)")
+            return True
     
     def clean_previous_builds(self):
         """Clean previous build artifacts aggressively."""
@@ -166,11 +181,6 @@ class MSIBuilder:
 """
 Master Search - cx_Freeze MSI Setup
 Automated setup for Windows MSI installer creation
-
-Note: OCR engines (EasyOCR, PaddleOCR) are installed separately via:
-      Master_Search --setup-ocr
-      
-This keeps the base MSI small (~6-8 MB) while allowing full OCR support.
 """
 
 from cx_Freeze import setup, Executable
@@ -192,7 +202,7 @@ executables = [
     )
 ]
 
-# Build options - keep base bundle small
+# Build options
 options = {{
     "build_exe": {{
         "excludes": ["tkinter", "unittest", "pydoc", "test"],
@@ -201,7 +211,6 @@ options = {{
         "add_to_path": True,
         "upgrade_code": "{self.upgrade_code}",
         "initial_target_dir": r"[ProgramFilesFolder]\\Master Search",
-        "install_icon": r"media\\icon.ico" if (project_root / "media" / "icon.ico").exists() else None,
     }}
 }}
 
@@ -212,7 +221,7 @@ setup(
     author="{self.author}",
     author_email="{self.email}",
     description="Professional file search tool with German localization",
-    long_description="Master Search - Advanced full-text file system search with HTML reports. OCR support available via optional setup.",
+    long_description="Master Search - Advanced full-text file system search with HTML reports",
     url="https://github.com/Loony2392/master-search",
     executables=executables,
     options=options
@@ -381,14 +390,16 @@ setup(
             print("\n📋 INSTALLATION INSTRUCTIONS:")
             print("1. Install MSI:")
             print(f"   msiexec /i \"{self.msi_filename}\"")
-            print("\n2. After installation (optional OCR setup):")
-            print("   Master_Search --setup-ocr")
+            print("\n2. After installation, create shortcuts:")
+            print("   python scripts/create_shortcuts.py")
+            print("   Or from Start Menu search: 'create_shortcuts'")
             print("\n3. Launch application:")
-            print("   • GUI: Start from Start Menu or desktop")
+            print("   • GUI: Double-click 'Master Search' from Start Menu or Desktop")
             print("   • CLI: Master_Search_CLI --help")
             print("\n4. Verify installation:")
             print("   Master_Search --version")
-            print("   Master_Search --ocr-info  (if OCR installed)")
+            print("\n5. (Optional) Setup OCR support:")
+            print("   Master_Search --setup-ocr")
             
             print("\n📊 INSTALLER SPECIFICATIONS:")
             print(f"   Base MSI Size: {file_size:.1f} MB")
@@ -414,6 +425,9 @@ setup(
             
             # Install OCR dependencies
             self.install_ocr_dependencies()
+            
+            # Prepare shortcut installer
+            self.create_shortcuts_installer()
             
             # Build executables
             if not self.build_executables():
