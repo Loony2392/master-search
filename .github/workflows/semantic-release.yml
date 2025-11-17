@@ -51,6 +51,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npx semantic-release
 
+      - name: 📌 Auto-bump version for next release
+        if: steps.semantic.outputs.new_release_published == 'true'
+        run: python3 scripts/bump_version.py
+
+      - name: 📤 Commit version bump for next release
+        if: steps.semantic.outputs.new_release_published == 'true'
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add version.py package.json
+          git commit -m "chore: auto-bump version for next release" --allow-empty
+          git push
+
       - name: 📊 Release Summary
         if: steps.semantic.outputs.new_release_published == 'true'
         run: |
