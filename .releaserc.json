@@ -2,11 +2,23 @@
   "branches": [
     "main"
   ],
+  "dryRun": false,
+  "ci": true,
   "plugins": [
     [
       "@semantic-release/commit-analyzer",
       {
-        "preset": "conventionalcommits"
+        "preset": "conventionalcommits",
+        "releaseRules": [
+          {
+            "type": "feat",
+            "release": "patch"
+          },
+          {
+            "type": "fix",
+            "release": "patch"
+          }
+        ]
       }
     ],
     [
@@ -21,6 +33,22 @@
         "changelogFile": "CHANGELOG.md"
       }
     ],
-    "@semantic-release/github"
+    [
+      "@semantic-release/github",
+      {
+        "successComment": "🎉 Release published!",
+        "failComment": false,
+        "assets": [
+          {
+            "path": "releases/windows/*.msi*",
+            "label": "Windows Installer"
+          },
+          {
+            "path": "releases/macos/*.dmg",
+            "label": "macOS Installer"
+          }
+        ]
+      }
+    ]
   ]
 }
