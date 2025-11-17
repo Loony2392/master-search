@@ -37,10 +37,18 @@ jobs:
       - name: 📚 Install dependencies
         run: npm install
 
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: 🔄 Sync version from version.py to package.json
+        run: python3 scripts/update_package_version.py
+
       - name: 🔍 Run Semantic Release
         id: semantic
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npx semantic-release
 
       - name: 📊 Release Summary
@@ -89,7 +97,7 @@ jobs:
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
   build-dmg:
     name: 🍎 Build macOS DMG
@@ -129,7 +137,7 @@ jobs:
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
   build-success:
     name: ✅ Build Complete

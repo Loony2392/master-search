@@ -652,7 +652,7 @@ jobs:
         generate_release_notes: false
         fail_on_unmatched_files: false
       env:
-        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
   deploy-documentation:
     name: 📚 Deploy Documentation
