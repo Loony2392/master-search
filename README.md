@@ -4,8 +4,8 @@
 
 > Professional file search tool with advanced features and German localization
 
-![Version](https://img.shields.io/badge/version-2025.11.13-blue.svg)
-![Python](https://img.shields.io/badge/python-3.12+-green.svg)
+![Version](https://img.shields.io/badge/version-2025.11.24-blue.svg)
+![Python](https://img.shields.io/badge/python-3.11%2B-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-orange.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)
 
@@ -78,11 +78,14 @@
 
 ### Option 2: Windows MSI Installer (Recommended for Windows)
 
-1. Download the latest `Master_Search_vXXXX.XX.XX_Windows.msi` from [Releases](https://github.com/Loony2392/master-search/releases)
+1. Download the latest `Master_Search-2025.11.24-win64.msi` from [Releases](https://github.com/Loony2392/master-search/releases)
 2. Double-click the MSI and follow the installation wizard
-3. Launch from Start Menu → "Master Search" or run from terminal
+3. **Shortcuts are created automatically:**
+   - Start Menu: "Master Search" (GUI) and "Master Search CLI"
+   - Desktop: "Master Search" (GUI) and "Master Search CLI"
+4. Launch from Start Menu or Desktop
 
-**Benefits:** No Python required, clean Windows integration, automatic uninstaller
+**Benefits:** No Python required, native shortcuts, clean Windows integration, automatic uninstaller, 6.3 MB lightweight install
 
 ### Option 3: Python Source (All Platforms)
 
@@ -432,6 +435,17 @@ Solution 4: Close other memory-intensive applications
 - Search path is incorrect
 - File permissions prevent access
 
+#### 🖥️ **Windows MSI Shortcuts Not Appearing**
+```
+Start Menu or Desktop shortcuts missing after installation
+```
+**Solution:**
+- Shortcuts are created automatically during MSI installation via cx_Freeze
+- If missing, they were not installed (uncommon issue)
+- Manual workaround: Create shortcuts manually pointing to:
+  - GUI: `C:\Program Files\Master Search\Master_Search.exe`
+  - CLI: `C:\Program Files\Master Search\MasterSearch_CLI.exe`
+
 ### Debug Mode
 
 Enable detailed logging for advanced troubleshooting:
@@ -500,6 +514,14 @@ See [.github/workflows/README.md](.github/workflows/README.md) for detailed work
 
 ## 📝 Changelog
 
+### 🎉 **Version 2025.11.24** (November 2025)
+- **⚡ Native cx_Freeze Shortcuts**: Automatic Start Menu and Desktop shortcuts during installation
+- **🚀 Optimized Build Process**: Build time reduced from 316s to 126s (60% faster)
+- **🧹 Simplified Codebase**: Removed WiX/NSIS alternatives, streamlined to native cx_Freeze
+- **📦 Lightweight MSI**: 6.3 MB base install without OCR dependencies
+- **🔄 Automatic Version Management**: Version automatically pulled from version.py
+- **✅ Production Ready**: Final optimized installer for distribution
+
 ### 🎉 **Version 2025.11.13** (November 2025)
 - **🍎 macOS Native DMG Package**: Professional app bundle with Python 3.12 + tkinter
 - **🔧 Release Organization**: Structured `releases/` folder for macOS, Windows, and Linux
@@ -507,15 +529,6 @@ See [.github/workflows/README.md](.github/workflows/README.md) for detailed work
 - **🌍 Cross-Platform Config**: Platform-aware paths (macOS, Linux, Windows)
 - **🧪 Test Infrastructure**: Pytest setup with conftest.py and import path resolution
 - **🚀 Production Ready**: All build scripts configured for distribution
-
-### 🎉 **Version 2025.11.10** (November 2025)
-- **🌍 Complete German Localization**: 138+ UI elements fully translated
-- **✨ Modern Animation System**: HorizontalPulseLoader with 60 FPS canvas rendering
-- **🍎 macOS Compatibility**: Native support for macOS with platform-specific utilities
-- **⚡ Performance Improvements**: Optimized search algorithms and memory management
-- **🔒 Enhanced Security**: Comprehensive security scanning and vulnerability checks
-- **🚀 Professional CI/CD**: Advanced GitHub Actions workflows with quality gates
-- **📚 Improved Documentation**: Bilingual documentation (German/English)
 
 ### 🔮 **Planned Features** (Version 2025.12.0)
 - **🔍 Regex Search**: Advanced pattern matching with regular expressions
