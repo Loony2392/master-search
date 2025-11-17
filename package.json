@@ -1,0 +1,31 @@
+{
+  "name": "master-search",
+  "version": "2025.11.24",
+  "description": "Professional file search tool with advanced features and German localization",
+  "author": "Loony2392 (b.kolb@loony-tech.de)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Loony2392/master-search.git"
+  },
+  "homepage": "https://github.com/Loony2392/master-search",
+  "bugs": {
+    "url": "https://github.com/Loony2392/master-search/issues"
+  },
+  "devDependencies": {
+    "semantic-release": "^22.0.0",
+    "@semantic-release/commit-analyzer": "^11.0.0",
+    "@semantic-release/release-notes-generator": "^13.0.0",
+    "@semantic-release/changelog": "^6.0.0",
+    "@semantic-release/github": "^9.0.0",
+    "conventional-changelog-conventionalcommits": "^7.0.0"
+  },
+  "release": {
+    "extends": [
+      "semantic-release:recommended"
+    ]
+  },
+  "scripts": {
+    "semantic-release": "semantic-release"
+  }
+}
