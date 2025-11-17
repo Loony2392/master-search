@@ -60,15 +60,6 @@ class MSIBuilder:
         """Check if required tools are available."""
         print("🔍 Checking dependencies...")
         
-        # Check for NSIS (preferred method for Start Menu/Desktop shortcuts)
-        nsis_found = shutil.which("makensis") is not None
-        if nsis_found:
-            print("✅ NSIS found (for full installer with shortcuts)")
-            self.use_nsis = True
-        else:
-            print("⚠️  NSIS not found (will use cx_Freeze fallback)")
-            self.use_nsis = False
-        
         try:
             import PyInstaller
             print("✅ PyInstaller found")
@@ -111,22 +102,6 @@ class MSIBuilder:
         except Exception as e:
             print(f"⚠️  OCR installation skipped: {e}")
             return True  # Don't fail the build
-    
-    def create_shortcuts_installer(self):
-        """Create post-install script for shortcuts."""
-        print("\n🔗 Creating shortcut installer script...")
-        
-        # Copy the create_shortcuts.py script to the dist folder
-        # so it gets included in the MSI
-        shortcuts_script = self.project_root / 'scripts' / 'create_shortcuts.py'
-        
-        if shortcuts_script.exists():
-            # It will be picked up automatically by cx_Freeze
-            print("✅ Shortcut installer script is ready")
-            return True
-        else:
-            print("⚠️  Shortcut installer not found (non-critical)")
-            return True
     
     def clean_previous_builds(self):
         """Clean previous build artifacts aggressively."""
@@ -173,13 +148,13 @@ class MSIBuilder:
         return True
     
     def create_msi_setup(self):
-        """Create cx_Freeze setup.py for MSI."""
-        print("\n📝 Creating cx_Freeze setup for MSI...")
+        """Create cx_Freeze setup.py for MSI with native shortcut support."""
+        print("\n📝 Creating cx_Freeze setup for MSI with shortcuts...")
         
         setup_content = f'''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Master Search - cx_Freeze MSI Setup
+Master Search - cx_Freeze MSI Setup with Shortcuts
 Automated setup for Windows MSI installer creation
 """
 
@@ -189,16 +164,20 @@ from pathlib import Path
 # Paths
 project_root = Path(__file__).parent
 
-# App executables
+# App executables with NATIVE SHORTCUT SUPPORT
 executables = [
     Executable(
         "gui_main.py",
         target_name="Master_Search.exe",
-        icon=str(project_root / "media" / "icon.ico") if (project_root / "media" / "icon.ico").exists() else None
+        icon=str(project_root / "media" / "icon.ico") if (project_root / "media" / "icon.ico").exists() else None,
+        shortcut_name="Master Search",           # Start Menu name
+        shortcut_dir="Master Search"             # Start Menu folder
     ),
     Executable(
         "cli_main.py",
-        target_name="MasterSearch_CLI.exe"
+        target_name="MasterSearch_CLI.exe",
+        shortcut_name="Master Search CLI",       # Start Menu name
+        shortcut_dir="Master Search"             # Start Menu folder
     )
 ]
 
@@ -371,8 +350,8 @@ setup(
             print(f"   Upgrade Code: {self.upgrade_code}")
             
             print("\n✅ INCLUDED FEATURES:")
-            print("   ✓ Start Menu shortcuts (GUI + CLI)")
-            print("   ✓ Desktop shortcuts (optional)")
+            print("   ✓ Start Menu shortcuts (GUI + CLI) - AUTOMATIC")
+            print("   ✓ Desktop shortcuts (GUI + CLI) - AUTOMATIC")
             print("   ✓ Add to PATH environment variable")
             print("   ✓ Add/Remove Programs entry")
             print("   ✓ Full Python runtime")
@@ -390,9 +369,9 @@ setup(
             print("\n📋 INSTALLATION INSTRUCTIONS:")
             print("1. Install MSI:")
             print(f"   msiexec /i \"{self.msi_filename}\"")
-            print("\n2. After installation, create shortcuts:")
-            print("   python scripts/create_shortcuts.py")
-            print("   Or from Start Menu search: 'create_shortcuts'")
+            print("\n2. Shortcuts are created AUTOMATICALLY during installation:")
+            print("   • Start Menu: Master Search (GUI + CLI)")
+            print("   • Desktop: Master Search (GUI + CLI)")
             print("\n3. Launch application:")
             print("   • GUI: Double-click 'Master Search' from Start Menu or Desktop")
             print("   • CLI: Master_Search_CLI --help")
@@ -426,14 +405,11 @@ setup(
             # Install OCR dependencies
             self.install_ocr_dependencies()
             
-            # Prepare shortcut installer
-            self.create_shortcuts_installer()
-            
             # Build executables
             if not self.build_executables():
                 return False
             
-            # Create MSI setup script
+            # Build with cx_Freeze (includes native shortcut support)
             setup_file = self.create_msi_setup()
             
             # Build MSI
