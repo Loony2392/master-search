@@ -115,7 +115,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.GH_TOKEN }}
         fetch-depth: 0
     
     - name: Update version.py
@@ -652,7 +652,7 @@ jobs:
         generate_release_notes: false
         fail_on_unmatched_files: false
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   deploy-documentation:
     name: 📚 Deploy Documentation

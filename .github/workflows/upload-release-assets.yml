@@ -175,7 +175,7 @@ jobs:
             ${{ steps.artifacts.outputs.msi_file }}
           draft: false
           prerelease: false
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: 📊 Summary
         run: |
