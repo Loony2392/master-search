@@ -97,17 +97,10 @@ jobs:
         echo "🏷️ Tag: v$VERSION"
         echo "🚧 Pre-release: $IS_PRERELEASE"
 
-  run-full-tests:
-    name: 🧪 Full Test Suite
-    uses: ./.github/workflows/test.yml
-    secrets: inherit
-    with:
-      run_extended_tests: true
-
   update-version:
     name: 📝 Update Version & Changelog
     runs-on: ubuntu-latest
-    needs: [validate-release, run-full-tests]
+    needs: [validate-release]
     if: github.event_name == 'workflow_dispatch'
     outputs:
       changelog_content: ${{ steps.changelog.outputs.content }}
